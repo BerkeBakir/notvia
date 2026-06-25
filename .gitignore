@@ -19,3 +19,6 @@ Thumbs.db
 # Geçici
 /tmp/
 *.log
+
+.vercel
+.env*
