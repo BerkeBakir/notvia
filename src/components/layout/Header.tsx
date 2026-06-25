@@ -1,0 +1,102 @@
+import Link from "next/link";
+import { getCurrentUser } from "@/lib/supabase/auth";
+import { createClient } from "@/lib/supabase/server";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
+
+export async function Header() {
+  const user = await getCurrentUser();
+
+  let unread = 0;
+  if (user) {
+    const supabase = await createClient();
+    const { count } = await supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("read", false);
+    unread = count ?? 0;
+  }
+
+  return (
+    <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+        <Link
+          href="/"
+          className="flex items-center gap-2 font-heading text-xl font-bold text-foreground"
+        >
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
+            N
+          </span>
+          Notvia
+        </Link>
+
+        <nav className="flex items-center gap-2 sm:gap-4 text-sm">
+          <Link
+            href="/notes"
+            className="hidden px-2 text-muted hover:text-foreground sm:block"
+          >
+            Keşfet
+          </Link>
+          <Link
+            href="/search"
+            className="hidden px-2 text-muted hover:text-foreground sm:block"
+          >
+            Ara
+          </Link>
+          <Link
+            href="/notes/upload"
+            className="hidden px-2 text-muted hover:text-foreground sm:block"
+          >
+            Not Yükle
+          </Link>
+          <Link
+            href="/premium"
+            className="hidden px-2 font-medium text-primary hover:opacity-80 sm:block"
+          >
+            ⭐ Premium
+          </Link>
+
+          <ThemeToggle />
+
+          {user ? (
+            <div className="flex items-center gap-3">
+              <Link
+                href="/notifications"
+                className="relative text-lg"
+                title="Bildirimler"
+              >
+                🔔
+                {unread > 0 && (
+                  <span className="absolute -right-2 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                    {unread > 9 ? "9+" : unread}
+                  </span>
+                )}
+              </Link>
+              <Link
+                href="/profile"
+                className="hidden text-foreground hover:text-primary sm:block"
+              >
+                {user.name}
+              </Link>
+              <form action="/api/auth/signout" method="post">
+                <button
+                  type="submit"
+                  className="rounded-full border border-border px-4 py-2 font-medium text-foreground hover:border-primary hover:text-primary"
+                >
+                  Çıkış
+                </button>
+              </form>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-full bg-primary px-4 py-2 font-medium text-primary-foreground hover:opacity-90"
+            >
+              Giriş Yap
+            </Link>
+          )}
+        </nav>
+      </div>
+    </header>
+  );
+}

@@ -1,0 +1,21 @@
+node_modules
+.next
+out
+.env
+.env.local
+.env*.local
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+
+# Claude Code local settings (komut geçmişi - secret içerebilir)
+.claude/
+
+# Editör/işletim sistemi
+.vscode/
+.idea/
+Thumbs.db
+
+# Geçici
+/tmp/
+*.log
