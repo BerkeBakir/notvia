@@ -1,8 +1,8 @@
 # 🎓 Notvia
 
-**A note & past-exam sharing platform for university students.**
+**A community-driven academic resource and study platform for university students.**
 
-Browse by university → department → course, upload and download lecture notes and past exam papers as PDFs, follow courses for email alerts, and study smarter with AI tools — all in one community-driven platform.
+Notvia enables students to upload, organize, discover, and discuss lecture notes and past-exam PDFs by university, department, and course. It combines Supabase-backed authentication, storage, PostgreSQL, and Row-Level Security with search, ratings, favorites, notifications, course verification, contribution levels, badges, and a leaderboard. Pro users can access four Google Gemini-powered PDF study tools for summarization, question generation, flashcards, and document-grounded Q&A. The platform includes 14 database migrations, three membership tiers, PWA support, and Vercel deployment.
 
 🌐 **Live demo:** [notvia.vercel.app](https://notvia.vercel.app)
 
