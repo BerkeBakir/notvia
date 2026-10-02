@@ -8,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
       "Üniversite öğrencileri için not ve sınav sorusu paylaşım platformu",
     start_url: "/",
     display: "standalone",
-    background_color: "#070d1f",
-    theme_color: "#2dd4cf",
+    background_color: "#0a0a0b",
+    theme_color: "#10b981",
     lang: "tr",
     icons: [
       { src: "/icon.svg", sizes: "any", type: "image/svg+xml" },

@@ -1,4 +1,14 @@
 import Link from "next/link";
+import {
+  Buildings,
+  FileArrowDown,
+  BellSimple,
+  TextAlignLeft,
+  Star,
+  UsersThree,
+  GraduationCap,
+  TrendUp,
+} from "@phosphor-icons/react/dist/ssr";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { NoteCard } from "@/components/notes/NoteCard";
@@ -7,37 +17,37 @@ import { createClient } from "@/lib/supabase/server";
 
 const FEATURES = [
   {
-    icon: "M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9h.01M9 12h.01M9 15h.01",
+    Icon: Buildings,
     title: "Üniversiteye göre keşfet",
     desc: "Üniversite → bölüm → ders hiyerarşisinde tam sana uygun notları bul.",
     span: "lg:col-span-3",
   },
   {
-    icon: "M7 3h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM14 3v5h5M9 13h6m-6 4h4",
+    Icon: FileArrowDown,
     title: "PDF not yükle & indir",
     desc: "Ders notlarını ve geçmiş sınav sorularını PDF olarak paylaş, indir.",
     span: "lg:col-span-3",
   },
   {
-    icon: "M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0",
+    Icon: BellSimple,
     title: "Ders bildirimleri",
     desc: "Takip ettiğin derse yeni içerik eklenince haberdar ol.",
     span: "lg:col-span-2",
   },
   {
-    icon: "M4 6h16M4 12h10M4 18h7",
+    Icon: TextAlignLeft,
     title: "AI not özeti",
     desc: "Pro üyeler, yüklenen notların yapay zeka özetine saniyeler içinde ulaşır.",
     span: "lg:col-span-2",
   },
   {
-    icon: "M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.8 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z",
+    Icon: Star,
     title: "Beğeni & en iyi notlar",
     desc: "En çok beğenilen notlar öne çıkar; kaliteli içerik kaybolmaz.",
     span: "lg:col-span-2",
   },
   {
-    icon: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75",
+    Icon: UsersThree,
     title: "Topluluk katkılı",
     desc: "Üniversite, bölüm ve dersleri öğrenciler ekler; içerik birlikte büyür.",
     span: "lg:col-span-6",
@@ -79,8 +89,9 @@ export default async function HomePage() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-primary/5 to-transparent" />
         <div className="animate-fade-up mx-auto flex max-w-3xl flex-col items-center px-4 pt-20 pb-12 text-center sm:pt-28">
-          <span className="rounded-full border border-border bg-card px-4 py-1.5 text-sm text-muted">
-            🎓 {uni.count ?? 0}+ üniversite · topluluk katkılı
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm text-muted">
+            <GraduationCap size={16} weight="duotone" className="text-primary" />
+            {uni.count ?? 0}+ üniversite · topluluk katkılı
           </span>
           <h1 className="mt-6 font-heading text-[2rem] font-bold leading-[1.12] tracking-tight text-foreground sm:text-6xl sm:leading-[1.05]">
             Notlarını paylaş,
@@ -144,8 +155,9 @@ export default async function HomePage() {
       {/* Trending */}
       {trending.length > 0 && (
         <section className="mx-auto max-w-6xl px-4 py-12">
-          <h2 className="font-heading text-2xl font-bold text-foreground">
-            🔥 Popüler Notlar
+          <h2 className="inline-flex items-center gap-2 font-heading text-2xl font-bold tracking-tight text-foreground">
+            <TrendUp size={24} weight="duotone" className="text-primary" />
+            Popüler Notlar
           </h2>
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {trending.map((note) => (
@@ -170,19 +182,7 @@ export default async function HomePage() {
               className={`group rounded-2xl border border-border bg-card p-6 transition duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10 ${f.span}`}
             >
               <div className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary transition group-hover:bg-primary/15">
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d={f.icon} />
-                </svg>
+                <f.Icon size={22} weight="duotone" aria-hidden="true" />
               </div>
               <h3 className="mt-4 font-heading text-lg text-card-foreground">
                 {f.title}

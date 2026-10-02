@@ -15,46 +15,60 @@
   --color-muted: var(--muted);
 }
 
-/* Aydınlık tema (varsayılan değişkenler) */
+/* Aydınlık tema — temiz beyaz + nötr zinc + zümrüt aksan */
 :root,
 [data-theme="light"] {
-  --background: #f5f8fc;
-  --foreground: #0b1d3a;
+  --background: #ffffff;
+  --foreground: #18181b;
   --card: #ffffff;
-  --card-foreground: #0b1d3a;
-  --border: #e2e8f0;
-  --primary: #0d9488;
+  --card-foreground: #18181b;
+  --border: #e4e4e7;
+  --primary: #047857;
   --primary-foreground: #ffffff;
-  --accent: #0d9488;
-  --muted: #5b6b82;
+  --accent: #b45309; /* amber — yalnızca sınav/puan semantiği */
+  --muted: #52525b;
   color-scheme: light;
 }
 
-/* Karanlık tema (nötr lacivert) */
+/* Karanlık tema — kömür nötr + zümrüt aksan */
 [data-theme="dark"] {
-  --background: #0a0f1a;
-  --foreground: #e7eef8;
-  --card: #121a29;
-  --card-foreground: #e7eef8;
-  --border: rgba(255, 255, 255, 0.1);
-  --primary: #2dd4cf;
-  --primary-foreground: #04121f;
-  --accent: #2dd4cf;
-  --muted: #8a9bb3;
+  --background: #0a0a0b;
+  --foreground: #fafafa;
+  --card: #161618;
+  --card-foreground: #fafafa;
+  --border: rgba(255, 255, 255, 0.09);
+  --primary: #34d399;
+  --primary-foreground: #04140c;
+  --accent: #fbbf24; /* amber — sınav/puan */
+  --muted: #a1a1aa;
   color-scheme: dark;
 }
 
-/* Özel "Notvia" teması (markalı turkuaz + mor parıltı) */
-[data-theme="notvia"] {
-  --background: #070d1f;
-  --foreground: #eafefb;
-  --card: #0d1730;
-  --card-foreground: #eafefb;
-  --border: rgba(45, 212, 207, 0.18);
-  --primary: #2dd4cf;
-  --primary-foreground: #04121f;
-  --accent: #7c5cff;
-  --muted: #86a6bf;
+/* "Sıcak editöryel" teması — kağıt tonu zemin + terracotta aksan */
+[data-theme="editorial"] {
+  --background: #f8f5ef;
+  --foreground: #292524;
+  --card: #fffdf8;
+  --card-foreground: #292524;
+  --border: #e7e1d5;
+  --primary: #c2410c; /* terracotta */
+  --primary-foreground: #fffaf5;
+  --accent: #a16207; /* ochre — sınav/puan */
+  --muted: #78716c;
+  color-scheme: light;
+}
+
+/* "Net & yüksek kontrast" teması — kömür siyah + elektrik mavi */
+[data-theme="contrast"] {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #121217;
+  --card-foreground: #fafafa;
+  --border: rgba(255, 255, 255, 0.14);
+  --primary: #3b82f6; /* elektrik mavi */
+  --primary-foreground: #ffffff;
+  --accent: #fbbf24; /* amber — sınav/puan (yüksek kontrast çift) */
+  --muted: #9ca3af;
   color-scheme: dark;
 }
 
@@ -101,19 +115,13 @@ body::before {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Notvia temasına özel arka plan parıltısı — daha sakin, tek-aksanlı */
-[data-theme="notvia"] body {
-  background-image:
-    radial-gradient(
-      900px 520px at 88% -12%,
-      rgba(45, 212, 207, 0.1),
-      transparent 60%
-    ),
-    radial-gradient(
-      760px 420px at -8% 4%,
-      rgba(124, 92, 255, 0.06),
-      transparent 58%
-    );
+/* Contrast teması — çok ince üst ışık (neon yok) */
+[data-theme="contrast"] body {
+  background-image: radial-gradient(
+    1000px 560px at 50% -15%,
+    rgba(59, 130, 246, 0.06),
+    transparent 62%
+  );
   background-attachment: fixed;
 }
 
