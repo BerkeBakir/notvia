@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Sora } from "next/font/google";
+import { Plus_Jakarta_Sans, Sora } from "next/font/google";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
@@ -8,15 +8,17 @@ import "@/styles/globals.css";
 
 const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
 
-const inter = Inter({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin", "latin-ext"],
   variable: "--font-inter",
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
 const sora = Sora({
   subsets: ["latin", "latin-ext"],
   variable: "--font-sora",
+  weight: ["500", "600", "700", "800"],
   display: "swap",
 });
 
@@ -70,7 +72,7 @@ export default function RootLayout({
   return (
     <html
       lang="tr"
-      className={`${inter.variable} ${sora.variable}`}
+      className={`${jakarta.variable} ${sora.variable}`}
       suppressHydrationWarning
     >
       <body>
