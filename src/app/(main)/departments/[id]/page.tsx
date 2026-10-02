@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { mapNoteRow } from "@/lib/supabase/mappers";
 import { NoteCard } from "@/components/notes/NoteCard";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default async function DepartmentPage({
   params,
@@ -80,9 +81,13 @@ export default async function DepartmentPage({
           🔥 En Beğenilen Notlar
         </h2>
         {topNotes.length === 0 ? (
-          <p className="mt-3 text-sm text-muted">
-            Bu bölümde henüz not yok.
-          </p>
+          <EmptyState
+            className="mt-4"
+            icon="📄"
+            title="Bu bölümde henüz not yok"
+            description="İlk notu bir derse yükleyerek bölümü canlandır."
+            action={{ href: "/notes/upload", label: "Not Yükle" }}
+          />
         ) : (
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {topNotes.map((note) => (

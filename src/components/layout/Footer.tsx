@@ -36,6 +36,12 @@ export function Footer() {
           <Link href="/premium" className="hover:text-primary">
             Premium
           </Link>
+          <Link href="/privacy" className="hover:text-primary">
+            Gizlilik
+          </Link>
+          <Link href="/terms" className="hover:text-primary">
+            Şartlar
+          </Link>
         </nav>
       </div>
       <div className="border-t border-border py-4 text-center text-xs text-muted">

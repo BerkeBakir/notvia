@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { MarkAllRead } from "@/components/notifications/MarkAllRead";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 const ICONS: Record<string, string> = {
   comment: "💬",
@@ -32,7 +33,12 @@ export default async function NotificationsPage() {
       </h1>
 
       {list.length === 0 ? (
-        <p className="text-muted">Henüz bildirimin yok.</p>
+        <EmptyState
+          icon="🔔"
+          title="Henüz bildirimin yok"
+          description="Takip ettiğin derslere içerik eklendiğinde ve notların etkileşim aldığında burada görünecek."
+          action={{ href: "/notes", label: "Notları Keşfet" }}
+        />
       ) : (
         <ul className="space-y-2">
           {list.map((n) => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -8,6 +9,7 @@ export interface CommentItem {
   id: string;
   content: string;
   created_at: string;
+  authorId: string;
   authorName: string;
 }
 
@@ -52,7 +54,7 @@ export function CommentSection({
     }
 
     setComments((prev) => [
-      { ...data, authorName: userName },
+      { ...data, authorId: userId, authorName: userName },
       ...prev,
     ]);
     setText("");
@@ -95,9 +97,12 @@ export function CommentSection({
             className="rounded-lg border border-border bg-card p-4"
           >
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-foreground">
+              <Link
+                href={`/users/${c.authorId}`}
+                className="text-sm font-medium text-foreground hover:text-primary hover:underline"
+              >
                 {c.authorName}
-              </span>
+              </Link>
               <span className="text-xs text-muted">
                 {new Date(c.created_at).toLocaleDateString("tr-TR")}
               </span>

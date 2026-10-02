@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/supabase/auth";
+import { getCurrentUser, isModerator } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { MobileMenu } from "@/components/layout/MobileMenu";
 
 export async function Header() {
   const user = await getCurrentUser();
@@ -72,13 +73,26 @@ export async function Header() {
                   </span>
                 )}
               </Link>
+              {isModerator(user) && (
+                <Link
+                  href="/admin"
+                  className="hidden px-2 text-muted hover:text-primary sm:block"
+                  title="Moderasyon"
+                >
+                  🛡️
+                </Link>
+              )}
               <Link
                 href="/profile"
                 className="hidden text-foreground hover:text-primary sm:block"
               >
                 {user.name}
               </Link>
-              <form action="/api/auth/signout" method="post">
+              <form
+                action="/api/auth/signout"
+                method="post"
+                className="hidden sm:block"
+              >
                 <button
                   type="submit"
                   className="rounded-full border border-border px-4 py-2 font-medium text-foreground hover:border-primary hover:text-primary"
@@ -90,11 +104,17 @@ export async function Header() {
           ) : (
             <Link
               href="/login"
-              className="rounded-full bg-primary px-4 py-2 font-medium text-primary-foreground hover:opacity-90"
+              className="hidden rounded-full bg-primary px-4 py-2 font-medium text-primary-foreground hover:opacity-90 sm:inline-block"
             >
               Giriş Yap
             </Link>
           )}
+
+          <MobileMenu
+            isLoggedIn={!!user}
+            userName={user?.name}
+            isMod={!!user && isModerator(user)}
+          />
         </nav>
       </div>
     </header>

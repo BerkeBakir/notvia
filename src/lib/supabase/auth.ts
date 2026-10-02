@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Plan } from "@/types";
+import type { Plan, Role } from "@/types";
 
 export interface AuthUser {
   id: string;
@@ -7,6 +7,7 @@ export interface AuthUser {
   name: string;
   avatarUrl?: string;
   plan: Plan;
+  role: Role;
   universityId: string | null;
   departmentId: string | null;
   classYear: string | null;
@@ -16,6 +17,10 @@ export const PAID_PLANS: Plan[] = ["premium", "pro"];
 
 export function isPaid(plan: Plan): boolean {
   return plan === "premium" || plan === "pro";
+}
+
+export function isModerator(user: AuthUser): boolean {
+  return user.role === "moderator" || user.role === "admin";
 }
 
 export function isProfileComplete(user: AuthUser): boolean {
@@ -37,7 +42,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("plan, name, university_id, department_id, class_year")
+    .select("plan, role, name, university_id, department_id, class_year")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -53,6 +58,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       "Kullanıcı",
     avatarUrl: (meta.avatar_url as string) ?? undefined,
     plan: (profile?.plan as Plan) ?? "free",
+    role: (profile?.role as Role) ?? "member",
     universityId: profile?.university_id ?? null,
     departmentId: profile?.department_id ?? null,
     classYear: profile?.class_year ?? null,

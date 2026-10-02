@@ -6,6 +6,26 @@ import { mapNoteRow } from "@/lib/supabase/mappers";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { NotificationToggle } from "@/components/notes/NotificationToggle";
 import { VerifyButton } from "@/components/notes/VerifyButton";
+import { EmptyState } from "@/components/ui/EmptyState";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: course } = await supabase
+    .from("courses")
+    .select("name,instructor")
+    .eq("id", id)
+    .maybeSingle();
+  if (!course) return { title: "Ders bulunamadı" };
+  return {
+    title: course.name,
+    description: `${course.name}${course.instructor ? ` (${course.instructor})` : ""} dersine ait ders notları ve geçmiş sınav soruları.`,
+  };
+}
 
 export default async function CoursePage({
   params,
@@ -129,12 +149,12 @@ export default async function CoursePage({
       </div>
 
       {notes.length === 0 ? (
-        <p className="text-muted">
-          Bu ders için henüz içerik yok.{" "}
-          <Link href="/notes/upload" className="text-primary hover:underline">
-            İlk notu sen yükle.
-          </Link>
-        </p>
+        <EmptyState
+          icon="📄"
+          title="Bu ders için henüz içerik yok"
+          description="İlk ders notunu veya çıkmış sınav sorusunu sen paylaş."
+          action={{ href: "/notes/upload", label: "İlk Notu Yükle" }}
+        />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {notes.map((note, i) => (

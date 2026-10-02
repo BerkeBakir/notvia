@@ -72,7 +72,7 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-primary/5 to-transparent" />
-        <div className="mx-auto flex max-w-3xl flex-col items-center px-4 pt-20 pb-12 text-center sm:pt-28">
+        <div className="animate-fade-up mx-auto flex max-w-3xl flex-col items-center px-4 pt-20 pb-12 text-center sm:pt-28">
           <span className="rounded-full border border-border bg-card px-4 py-1.5 text-sm text-muted">
             🎓 {uni.count ?? 0}+ üniversite · topluluk katkılı
           </span>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser, isProfileComplete } from "@/lib/supabase/auth";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   computeBadges,
   computeLevel,
@@ -179,12 +180,13 @@ export default async function ProfilePage() {
           Yüklediğim Notlar
         </h2>
         {notes.length === 0 ? (
-          <p className="mt-3 text-sm text-muted">
-            Henüz not yüklemedin.{" "}
-            <Link href="/notes/upload" className="text-primary hover:underline">
-              İlk notunu yükle.
-            </Link>
-          </p>
+          <EmptyState
+            className="mt-4"
+            icon="📄"
+            title="Henüz not yüklemedin"
+            description="İlk notunu paylaş, puan ve rozet kazanmaya başla."
+            action={{ href: "/notes/upload", label: "İlk Notunu Yükle" }}
+          />
         ) : (
           <ul className="mt-4 space-y-2">
             {notes.map((n) => (
@@ -208,7 +210,13 @@ export default async function ProfilePage() {
       <section>
         <h2 className="font-heading text-xl text-foreground">Favorilerim</h2>
         {(favNotes ?? []).length === 0 ? (
-          <p className="mt-3 text-sm text-muted">Henüz kaydettiğin not yok.</p>
+          <EmptyState
+            className="mt-4"
+            icon="⭐"
+            title="Henüz kaydettiğin not yok"
+            description="Beğendiğin notları favorilere ekle, buradan kolayca ulaş."
+            action={{ href: "/notes", label: "Notları Keşfet" }}
+          />
         ) : (
           <ul className="mt-4 space-y-2">
             {(favNotes ?? []).map((n) => (

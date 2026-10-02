@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface University {
   id: string;
@@ -54,6 +55,22 @@ export function UniversityBrowser({
       />
 
       <p className="text-xs text-muted">{filtered.length} üniversite</p>
+
+      {filtered.length === 0 &&
+        (universities.length === 0 ? (
+          <EmptyState
+            icon="🏫"
+            title="Henüz üniversite eklenmemiş"
+            description="İlk dersi ekleyerek üniversite ve bölüm hiyerarşisini sen başlat."
+            action={{ href: "/courses/new", label: "+ Ders Ekle" }}
+          />
+        ) : (
+          <EmptyState
+            icon="🔍"
+            title="Sonuç bulunamadı"
+            description={`"${query}" ile eşleşen üniversite veya şehir yok. Farklı bir arama dene.`}
+          />
+        ))}
 
       <div className="space-y-3">
         {filtered.map((uni) => {

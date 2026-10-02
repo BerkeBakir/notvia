@@ -16,6 +16,28 @@ import {
   type CommentItem,
 } from "@/components/notes/CommentSection";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: note } = await supabase
+    .from("notes")
+    .select("title,description,type")
+    .eq("id", id)
+    .maybeSingle();
+  if (!note) return { title: "Not bulunamadı" };
+  const kind = note.type === "exam" ? "Sınav Sorusu" : "Ders Notu";
+  const desc = note.description || `${kind} — Notvia'da paylaşıldı.`;
+  return {
+    title: note.title,
+    description: desc,
+    openGraph: { title: `${note.title} — Notvia`, description: desc },
+  };
+}
+
 export default async function NoteDetailPage({
   params,
 }: {
@@ -28,7 +50,7 @@ export default async function NoteDetailPage({
   const { data: note } = await supabase
     .from("notes")
     .select(
-      "id,title,description,type,file_url,downloads,likes,dislikes,course_id",
+      "id,title,description,type,file_url,downloads,likes,dislikes,course_id,user_id",
     )
     .eq("id", id)
     .single();
@@ -40,6 +62,11 @@ export default async function NoteDetailPage({
         .select("id,name")
         .eq("id", note.course_id)
         .single()
+    : { data: null };
+
+  // Paylaşan kullanıcı
+  const { data: uploader } = note.user_id
+    ? await supabase.from("users").select("id,name").eq("id", note.user_id).maybeSingle()
     : { data: null };
 
   // Etiketler
@@ -69,6 +96,7 @@ export default async function NoteDetailPage({
     id: c.id,
     content: c.content,
     created_at: c.created_at,
+    authorId: c.user_id,
     authorName: nameById.get(c.user_id) ?? "Kullanıcı",
   }));
 
@@ -143,6 +171,17 @@ export default async function NoteDetailPage({
         <h1 className="mt-3 font-heading text-2xl font-bold text-card-foreground">
           {note.title}
         </h1>
+        {uploader && (
+          <p className="mt-1 text-sm text-muted">
+            Paylaşan:{" "}
+            <Link
+              href={`/users/${uploader.id}`}
+              className="text-primary hover:underline"
+            >
+              {uploader.name}
+            </Link>
+          </p>
+        )}
         {note.description && (
           <p className="mt-2 text-muted">{note.description}</p>
         )}

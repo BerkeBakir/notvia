@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const MODEL = "gemini-2.0-flash";
+const MODEL = "gemini-2.5-flash";
 const MAX_PDF_BYTES = 15 * 1024 * 1024; // inline istek limiti için güvenli sınır
 
 /**

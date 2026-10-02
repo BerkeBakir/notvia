@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { computeLevel, computePoints } from "@/lib/contribution";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default async function LeaderboardPage() {
   const supabase = await createClient();
@@ -47,7 +49,7 @@ export default async function LeaderboardPage() {
         downloadsReceived: 0,
         coursesAdded: 0,
       };
-      return { name: u.name, points: computePoints(s), stats: s };
+      return { id: u.id, name: u.name, points: computePoints(s), stats: s };
     })
     .filter((r) => r.points > 0)
     .sort((a, b) => b.points - a.points)
@@ -67,7 +69,12 @@ export default async function LeaderboardPage() {
       </div>
 
       {ranked.length === 0 ? (
-        <p className="text-muted">Henüz katkı yapan kimse yok.</p>
+        <EmptyState
+          icon="🏆"
+          title="Henüz katkı yapan kimse yok"
+          description="İlk notu sen yükle, liderlik tablosunun zirvesine yerleş."
+          action={{ href: "/notes/upload", label: "Not Yükle" }}
+        />
       ) : (
         <ul className="space-y-2">
           {ranked.map((r, i) => (
@@ -80,7 +87,12 @@ export default async function LeaderboardPage() {
                   {medals[i] ?? i + 1}
                 </span>
                 <div>
-                  <div className="font-medium text-foreground">{r.name}</div>
+                  <Link
+                    href={`/users/${r.id}`}
+                    className="font-medium text-foreground hover:text-primary"
+                  >
+                    {r.name}
+                  </Link>
                   <div className="text-xs text-muted">
                     {r.stats.notesCount} not · {r.stats.likesReceived} beğeni ·{" "}
                     {computeLevel(r.points)}
