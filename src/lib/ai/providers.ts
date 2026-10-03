@@ -6,6 +6,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 interface Provider {
   name: string;
+  model: string;
   generate: (prompt: string) => Promise<string>;
   stream: (prompt: string) => AsyncGenerator<string>;
 }
@@ -18,6 +19,7 @@ function openAiCompatible(name: string, baseUrl: string, apiKey: string, model: 
   };
   return {
     name,
+    model,
     async generate(prompt: string) {
       const res = await fetch(`${baseUrl}/chat/completions`, {
         method: "POST",
@@ -82,6 +84,7 @@ function openAiCompatible(name: string, baseUrl: string, apiKey: string, model: 
 function geminiProvider(apiKey: string, model: string): Provider {
   return {
     name: "gemini",
+    model,
     async generate(prompt: string) {
       const genAI = new GoogleGenerativeAI(apiKey);
       const m = genAI.getGenerativeModel({ model });
@@ -151,8 +154,12 @@ export async function generateChat(prompt: string): Promise<{ text: string; prov
  * Streaming sohbet: zincirdeki ilk çalışan sağlayıcının token'larını akıtır.
  * Bir sağlayıcı HENÜZ token üretmeden hata verirse sıradakine geçilir.
  * Akış başladıktan sonra bir hata olursa akış sonlanır (sağlayıcı değiştirilemez).
+ * onProvider: ilk token geldiğinde yanıtı hangi sağlayıcı/modelin verdiğini bildirir.
  */
-export async function* generateChatStream(prompt: string): AsyncGenerator<string> {
+export async function* generateChatStream(
+  prompt: string,
+  onProvider?: (info: { provider: string; model: string }) => void,
+): AsyncGenerator<string> {
   const chain = buildChain();
   if (chain.length === 0) throw new Error("Hiçbir AI sağlayıcısı yapılandırılmamış.");
 
@@ -161,6 +168,7 @@ export async function* generateChatStream(prompt: string): AsyncGenerator<string
     let yielded = false;
     try {
       for await (const delta of p.stream(prompt)) {
+        if (!yielded) onProvider?.({ provider: p.name, model: p.model });
         yielded = true;
         yield delta;
       }

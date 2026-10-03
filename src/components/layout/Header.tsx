@@ -3,6 +3,7 @@ import { getCurrentUser, isModerator } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { MobileMenu } from "@/components/layout/MobileMenu";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 export async function Header() {
   const user = await getCurrentUser();
@@ -51,6 +52,12 @@ export async function Header() {
             Ara
           </Link>
           <Link
+            href="/courses/new"
+            className="hidden px-2 text-muted hover:text-foreground sm:block"
+          >
+            Ders Ekle
+          </Link>
+          <Link
             href="/notes/upload"
             className="hidden px-2 text-muted hover:text-foreground sm:block"
           >
@@ -67,18 +74,7 @@ export async function Header() {
 
           {user ? (
             <div className="flex items-center gap-3">
-              <Link
-                href="/notifications"
-                className="relative text-lg"
-                title="Bildirimler"
-              >
-                🔔
-                {unread > 0 && (
-                  <span className="absolute -right-2 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
-                    {unread > 9 ? "9+" : unread}
-                  </span>
-                )}
-              </Link>
+              <NotificationBell userId={user.id} initialUnread={unread} />
               {isModerator(user) && (
                 <Link
                   href="/admin"

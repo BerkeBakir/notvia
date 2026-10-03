@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { summarizePdf } from "@/lib/ai/summarize";
 
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) {

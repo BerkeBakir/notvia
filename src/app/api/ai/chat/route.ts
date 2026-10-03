@@ -105,7 +105,11 @@ export async function POST(request: NextRequest) {
         send({ type: "delta", text: full });
       } else {
         try {
-          for await (const delta of generateChatStream(prep.prompt)) {
+          const onProvider = (info: { provider: string; model: string }) => {
+            console.info(`[ai] yanıtlayan sağlayıcı: ${info.provider} (${info.model})`);
+            send({ type: "provider", ...info });
+          };
+          for await (const delta of generateChatStream(prep.prompt, onProvider)) {
             full += delta;
             send({ type: "delta", text: delta });
           }

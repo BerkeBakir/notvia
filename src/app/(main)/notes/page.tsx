@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser, isPaid } from "@/lib/supabase/auth";
 import { UniversityBrowser } from "@/components/notes/UniversityBrowser";
@@ -40,12 +39,6 @@ export default async function BrowsePage() {
             sorularını keşfet. Aradığın ders yoksa sen ekle.
           </p>
         </div>
-        <Link
-          href="/courses/new"
-          className="rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90"
-        >
-          + Ders Ekle
-        </Link>
       </div>
 
       <AdSlot show={showAds} />

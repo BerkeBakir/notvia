@@ -79,6 +79,7 @@ export function NoteCard({
           userId={userId}
           initialLiked={liked}
           initialCount={note.likes}
+          isOwner={!!userId && userId === note.userId}
         />
         {note.fileUrl && (
           <DownloadButton
