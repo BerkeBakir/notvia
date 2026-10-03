@@ -9,11 +9,14 @@ export function LikeButton({
   userId,
   initialLiked,
   initialCount,
+  isOwner = false,
 }: {
   noteId: string;
   userId: string | null;
   initialLiked: boolean;
   initialCount: number;
+  /** Kendi notu: beğenemez (DB'de de RLS ile engelli). */
+  isOwner?: boolean;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -53,7 +56,8 @@ export function LikeButton({
   return (
     <button
       onClick={toggle}
-      disabled={loading}
+      disabled={loading || isOwner}
+      title={isOwner ? "Kendi notunu beğenemezsin" : undefined}
       aria-pressed={liked}
       className={
         liked

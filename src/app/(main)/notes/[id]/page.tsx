@@ -208,6 +208,7 @@ export default async function NoteDetailPage({
             initialDisliked={disliked}
             initialLikes={note.likes}
             initialDislikes={note.dislikes ?? 0}
+            isOwner={!!user && user.id === note.user_id}
           />
           <DownloadButton
             noteId={note.id}

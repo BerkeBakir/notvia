@@ -12,6 +12,7 @@ export function VoteButtons({
   initialDisliked,
   initialLikes,
   initialDislikes,
+  isOwner = false,
 }: {
   noteId: string;
   userId: string | null;
@@ -19,6 +20,8 @@ export function VoteButtons({
   initialDisliked: boolean;
   initialLikes: number;
   initialDislikes: number;
+  /** Kendi notu: oy veremez (DB'de de RLS ile engelli). */
+  isOwner?: boolean;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -74,7 +77,8 @@ export function VoteButtons({
     <div className="flex flex-wrap items-center gap-2">
       <button
         onClick={like}
-        disabled={loading}
+        disabled={loading || isOwner}
+        title={isOwner ? "Kendi notunu beğenemezsin" : undefined}
         className={
           liked
             ? "inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1.5 text-sm font-medium text-primary disabled:opacity-50"
@@ -87,7 +91,8 @@ export function VoteButtons({
 
       <button
         onClick={dislike}
-        disabled={loading}
+        disabled={loading || isOwner}
+        title={isOwner ? "Kendi notuna oy veremezsin" : undefined}
         className={
           disliked
             ? "inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-3 py-1.5 text-sm font-medium text-red-400 disabled:opacity-50"
