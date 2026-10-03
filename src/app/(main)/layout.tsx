@@ -1,12 +1,15 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ReferralCapture } from "@/components/referral/ReferralCapture";
+import { FloatingAssistant } from "@/components/ai/FloatingAssistant";
+import { getCurrentUser } from "@/lib/supabase/auth";
 
-export default function MainLayout({
+export default async function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const user = await getCurrentUser();
   return (
     <div className="flex min-h-screen flex-col">
       <ReferralCapture />
@@ -15,6 +18,7 @@ export default function MainLayout({
         {children}
       </main>
       <Footer />
+      <FloatingAssistant loggedIn={!!user} />
     </div>
   );
 }
