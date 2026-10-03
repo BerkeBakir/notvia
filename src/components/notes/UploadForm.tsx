@@ -155,6 +155,17 @@ export function UploadForm({
         // bildirim başarısız olsa da yüklemeyi tamamla
       }
 
+      // AI indeksleme (best-effort, hata yüklemeyi bozmaz)
+      try {
+        await fetch("/api/ai/index", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ noteId: inserted.id }),
+        });
+      } catch {
+        // indeksleme başarısız olsa da yüklemeyi tamamla
+      }
+
       router.push(`/courses/${courseId}`);
       router.refresh();
     } catch (err) {
