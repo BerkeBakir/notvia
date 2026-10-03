@@ -141,8 +141,35 @@ body::before {
   animation: notvia-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* AI paneli: masaüstünde sağdan, mobilde alttan kayar */
+@keyframes notvia-panel-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes notvia-panel-in-side {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.animate-panel-in {
+  animation: notvia-panel-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (min-width: 640px) {
+  .animate-panel-in {
+    animation-name: notvia-panel-in-side;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-fade-up {
+  .animate-fade-up,
+  .animate-panel-in {
     animation: none;
   }
 }

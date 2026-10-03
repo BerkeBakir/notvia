@@ -100,7 +100,7 @@ export function NoteCard({
           PDF&apos;i Görüntüle
         </a>
       )}
-      {note.fileUrl && <AiSummary noteId={note.id} isPro={isPro} />}
+      {note.fileUrl && <AiSummary noteId={note.id} isPro={isPro} title={note.title} />}
     </article>
   );
 }
