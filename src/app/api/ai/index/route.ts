@@ -20,15 +20,19 @@ export async function POST(request: NextRequest) {
   }
 
   const { data: note } = await admin
-    .from("notes").select("id,title,file_url,course_id").eq("id", noteId).single();
+    .from("notes").select("id,title,file_url,course_id,user_id,ai_indexed").eq("id", noteId).single();
   if (!note) return NextResponse.json({ ok: true, indexed: false, chunks: 0 });
+  if (note.user_id !== user.id) {
+    return NextResponse.json({ error: "Bu notu indeksleyemezsin." }, { status: 403 });
+  }
 
   try {
     const result = await indexNote(admin, note);
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {
+    console.error(err);
     return NextResponse.json(
-      { ok: false, error: err instanceof Error ? err.message : "indexleme hatası" },
+      { ok: false, error: "İndeksleme başarısız." },
       { status: 500 },
     );
   }

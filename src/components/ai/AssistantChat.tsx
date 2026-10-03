@@ -24,10 +24,12 @@ export function AssistantChat({
   const [conversationId, setConversationId] = useState<string>("");
   const [notice, setNotice] = useState("");
 
+  const missingCourse = scopeType === "course" && !courseId;
+
   async function send(e: React.FormEvent) {
     e.preventDefault();
     const message = input.trim();
-    if (!message || loading) return;
+    if (!message || loading || missingCourse) return;
     setInput("");
     setNotice("");
     setMessages((m) => [...m, { role: "user", content: message }]);
@@ -80,6 +82,7 @@ export function AssistantChat({
 
       <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card p-3">
         <button
+          type="button"
           onClick={() => setScopeType("all")}
           className={
             scopeType === "all"
@@ -90,6 +93,7 @@ export function AssistantChat({
           Tüm platform
         </button>
         <button
+          type="button"
           onClick={() => setScopeType("course")}
           className={
             scopeType === "course"
@@ -153,6 +157,9 @@ export function AssistantChat({
         {loading && <p className="text-sm text-muted">Düşünüyor...</p>}
       </div>
 
+      {missingCourse && (
+        <p className="text-center text-xs text-muted">Önce bir ders seç.</p>
+      )}
       {notice && <p className="text-center text-xs text-muted">{notice}</p>}
 
       <form onSubmit={send} className="flex gap-2">
@@ -164,7 +171,7 @@ export function AssistantChat({
         />
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || missingCourse}
           aria-label="Gönder"
           className="grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
         >

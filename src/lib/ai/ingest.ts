@@ -10,8 +10,19 @@ export async function indexNote(
   admin: SupabaseClient,
   note: { id: string; title: string; file_url: string; course_id: string | null },
 ): Promise<{ indexed: boolean; chunks: number }> {
+  // SSRF koruması: yalnızca kendi Supabase storage adresimiz
+  const allowedPrefix = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/`;
+  if (!note.file_url || !note.file_url.startsWith(allowedPrefix)) {
+    return { indexed: false, chunks: 0 };
+  }
+
   const res = await fetch(note.file_url);
   if (!res.ok) throw new Error("PDF indirilemedi.");
+  const declared = Number(res.headers.get("content-length"));
+  if (declared && declared > MAX_PDF_BYTES) {
+    await admin.from("notes").update({ ai_indexed: false }).eq("id", note.id);
+    return { indexed: false, chunks: 0 };
+  }
   const buf = Buffer.from(await res.arrayBuffer());
   if (buf.byteLength > MAX_PDF_BYTES) {
     await admin.from("notes").update({ ai_indexed: false }).eq("id", note.id);
@@ -25,10 +36,12 @@ export async function indexNote(
     return { indexed: false, chunks: 0 };
   }
 
+  // Önce embedding: başarısız olursa mevcut indeks bozulmaz
+  const vectors = await embedTexts(chunks);
+
   // Yeniden indeksleme için eski parçaları temizle (idempotent)
   await admin.from("note_chunks").delete().eq("note_id", note.id);
 
-  const vectors = await embedTexts(chunks);
   const rows = chunks.map((content, i) => ({
     note_id: note.id,
     course_id: note.course_id,

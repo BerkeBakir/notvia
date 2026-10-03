@@ -7,6 +7,10 @@ import { answerQuestion } from "@/lib/ai/chat";
 
 export const maxDuration = 60;
 
+const isUuid = (v: unknown): v is string =>
+  typeof v === "string" &&
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Giriş yapmalısın." }, { status: 401 });
@@ -19,8 +23,15 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const message = String(body.message ?? "").trim();
   const scopeType = body.scopeType === "course" ? "course" : "all";
-  const scopeCourseId = body.scopeCourseId ?? null;
+  const scopeCourseId: string | null =
+    body.scopeCourseId === "" || body.scopeCourseId == null ? null : body.scopeCourseId;
   if (!message) return NextResponse.json({ error: "Mesaj gerekli." }, { status: 400 });
+  if (message.length > 2000) {
+    return NextResponse.json({ error: "Mesaj çok uzun (en fazla 2000 karakter)." }, { status: 400 });
+  }
+  if (scopeType === "course" && !isUuid(scopeCourseId)) {
+    return NextResponse.json({ error: "Geçerli bir ders seç." }, { status: 400 });
+  }
 
   const limit = await checkDailyLimit(admin, user.id, user.plan);
   if (!limit.allowed) {
@@ -31,8 +42,22 @@ export async function POST(request: NextRequest) {
   }
 
   // Sohbeti bul veya oluştur
-  let conversationId: string = body.conversationId ?? "";
-  if (!conversationId) {
+  let conversationId = "";
+  if (body.conversationId) {
+    if (!isUuid(body.conversationId)) {
+      return NextResponse.json({ error: "Sohbet bulunamadı." }, { status: 404 });
+    }
+    const { data: existing } = await admin
+      .from("ai_conversations")
+      .select("id")
+      .eq("id", body.conversationId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!existing) {
+      return NextResponse.json({ error: "Sohbet bulunamadı." }, { status: 404 });
+    }
+    conversationId = existing.id;
+  } else {
     const { data: conv, error } = await admin
       .from("ai_conversations")
       .insert({
@@ -49,12 +74,6 @@ export async function POST(request: NextRequest) {
     conversationId = conv.id;
   }
 
-  await admin.from("ai_messages").insert({
-    conversation_id: conversationId,
-    role: "user",
-    content: message,
-  });
-
   let answer: string;
   let sources: { noteId: string }[];
   try {
@@ -62,11 +81,18 @@ export async function POST(request: NextRequest) {
     answer = r.answer;
     sources = r.sources;
   } catch (err) {
+    console.error(err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Yanıtlanamadı." },
+      { error: "Yanıt üretilemedi, lütfen tekrar dene." },
       { status: 500 },
     );
   }
+
+  await admin.from("ai_messages").insert({
+    conversation_id: conversationId,
+    role: "user",
+    content: message,
+  });
 
   await admin.from("ai_messages").insert({
     conversation_id: conversationId,

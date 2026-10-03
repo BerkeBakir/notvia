@@ -16,7 +16,8 @@ export async function embedText(text: string): Promise<number[]> {
   const res = await model.embedContent({
     content: { role: "user", parts: [{ text }] },
     outputDimensionality: EMBED_DIM,
-  });
+    // SDK tipinde outputDimensionality yok; API kabul ediyor
+  } as Parameters<typeof model.embedContent>[0]);
   return res.embedding.values;
 }
 
