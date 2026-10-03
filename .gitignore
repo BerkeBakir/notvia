@@ -22,3 +22,7 @@ Thumbs.db
 
 .vercel
 .env*
+
+# AI test geçici dosyaları
+.tmp_pptx/
+.superpowers/
