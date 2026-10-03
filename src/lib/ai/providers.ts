@@ -112,6 +112,8 @@ function buildChain(): Provider[] {
 
   if (e.GEMINI_API_KEY) {
     chain.push(geminiProvider(e.GEMINI_API_KEY, e.GEMINI_CHAT_MODEL || "gemini-2.5-flash"));
+    // Gemini kotası model başına ayrı: flash dolunca lite ile devam
+    chain.push(geminiProvider(e.GEMINI_API_KEY, e.GEMINI_LITE_MODEL || "gemini-2.5-flash-lite"));
   }
   if (e.GROQ_API_KEY) {
     chain.push(openAiCompatible("groq", "https://api.groq.com/openai/v1", e.GROQ_API_KEY, e.GROQ_MODEL || "openai/gpt-oss-120b"));
@@ -133,8 +135,11 @@ function buildChain(): Provider[] {
  * Bir sağlayıcı hata/kota verirse sıradakine geçer. Hepsi tükenirse son hatayı fırlatır.
  * Dönüşte hangi sağlayıcının yanıtladığı da gelir (gözlemlenebilirlik için).
  */
-export async function generateChat(prompt: string): Promise<{ text: string; provider: string }> {
-  const chain = buildChain();
+export async function generateChat(
+  prompt: string,
+  opts: { skip?: string[] } = {},
+): Promise<{ text: string; provider: string }> {
+  const chain = buildChain().filter((p) => !opts.skip?.includes(p.name));
   if (chain.length === 0) throw new Error("Hiçbir AI sağlayıcısı yapılandırılmamış.");
 
   let lastErr: unknown;
