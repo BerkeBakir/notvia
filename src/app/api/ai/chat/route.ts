@@ -3,7 +3,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { consumeDailyQuota, refundDailyQuota } from "@/lib/ai/limit";
-import { answerQuestion } from "@/lib/ai/chat";
+import { prepareAnswer } from "@/lib/ai/chat";
+import { generateChatStream } from "@/lib/ai/providers";
 
 export const maxDuration = 60;
 
@@ -33,20 +34,27 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Geçerli bir ders seç." }, { status: 400 });
   }
 
-  // Atomik kota tüketimi (yarış-durumuna karşı). Başarısızlıkta iade edilir.
-  const quota = await consumeDailyQuota(admin, user.id, user.plan);
-  if (!quota.allowed) {
-    return NextResponse.json(
-      { error: "Günlük ücretsiz soru hakkın doldu. Pro'ya geçerek sınırsız sor.", remaining: 0 },
-      { status: 429 },
-    );
+  // RAG bağlamı + prompt (gömme + benzerlik). Bağlam yoksa model çağrılmaz.
+  const prep = await prepareAnswer(admin, message, { type: scopeType, courseId: scopeCourseId });
+
+  // Kota yalnızca model çağrılacaksa (bağlam varsa) tüketilir
+  let remaining: number | null = null;
+  if (!prep.empty) {
+    const quota = await consumeDailyQuota(admin, user.id, user.plan);
+    if (!quota.allowed) {
+      return NextResponse.json(
+        { error: "Günlük ücretsiz soru hakkın doldu. Pro'ya geçerek sınırsız sor.", remaining: 0 },
+        { status: 429 },
+      );
+    }
+    remaining = quota.remaining === Infinity ? null : quota.remaining;
   }
 
   // Sohbeti bul veya oluştur
   let conversationId = "";
   if (body.conversationId) {
     if (!isUuid(body.conversationId)) {
-      await refundDailyQuota(admin, user.id, user.plan);
+      if (!prep.empty) await refundDailyQuota(admin, user.id, user.plan);
       return NextResponse.json({ error: "Sohbet bulunamadı." }, { status: 404 });
     }
     const { data: existing } = await admin
@@ -56,7 +64,7 @@ export async function POST(request: NextRequest) {
       .eq("user_id", user.id)
       .maybeSingle();
     if (!existing) {
-      await refundDailyQuota(admin, user.id, user.plan);
+      if (!prep.empty) await refundDailyQuota(admin, user.id, user.plan);
       return NextResponse.json({ error: "Sohbet bulunamadı." }, { status: 404 });
     }
     conversationId = existing.id;
@@ -72,44 +80,62 @@ export async function POST(request: NextRequest) {
       .select("id")
       .single();
     if (error || !conv) {
-      await refundDailyQuota(admin, user.id, user.plan);
+      if (!prep.empty) await refundDailyQuota(admin, user.id, user.plan);
       return NextResponse.json({ error: "Sohbet oluşturulamadı." }, { status: 500 });
     }
     conversationId = conv.id;
   }
 
-  let answer: string;
-  let sources: { noteId: string }[];
-  try {
-    const r = await answerQuestion(admin, message, { type: scopeType, courseId: scopeCourseId });
-    answer = r.answer;
-    sources = r.sources;
-  } catch (err) {
-    console.error(err);
-    await refundDailyQuota(admin, user.id, user.plan);
-    return NextResponse.json(
-      { error: "Yanıt üretilemedi, lütfen tekrar dene." },
-      { status: 500 },
-    );
-  }
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (obj: unknown) =>
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
 
-  await admin.from("ai_messages").insert({
-    conversation_id: conversationId,
-    role: "user",
-    content: message,
+      send({ type: "meta", conversationId, sources: prep.sources, remaining });
+
+      let full = "";
+      if (prep.empty) {
+        full = prep.answer;
+        send({ type: "delta", text: full });
+      } else {
+        try {
+          for await (const delta of generateChatStream(prep.prompt)) {
+            full += delta;
+            send({ type: "delta", text: delta });
+          }
+        } catch (err) {
+          console.error(err);
+          await refundDailyQuota(admin, user.id, user.plan);
+          send({ type: "error", error: "Yanıt üretilemedi, lütfen tekrar dene." });
+          controller.close();
+          return;
+        }
+        if (!full) {
+          await refundDailyQuota(admin, user.id, user.plan);
+          full = "Yanıt üretilemedi.";
+          send({ type: "delta", text: full });
+        }
+      }
+
+      // Kalıcı kayıt (başarılı yanıttan sonra)
+      await admin.from("ai_messages").insert({ conversation_id: conversationId, role: "user", content: message });
+      await admin.from("ai_messages").insert({
+        conversation_id: conversationId,
+        role: "assistant",
+        content: full,
+        sources: prep.sources,
+      });
+
+      send({ type: "done" });
+      controller.close();
+    },
   });
 
-  await admin.from("ai_messages").insert({
-    conversation_id: conversationId,
-    role: "assistant",
-    content: answer,
-    sources,
-  });
-
-  return NextResponse.json({
-    conversationId,
-    answer,
-    sources,
-    remaining: quota.remaining === Infinity ? null : quota.remaining,
+  return new Response(stream, {
+    headers: {
+      "content-type": "text/event-stream; charset=utf-8",
+      "cache-control": "no-cache, no-transform",
+    },
   });
 }

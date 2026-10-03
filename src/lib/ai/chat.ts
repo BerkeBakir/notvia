@@ -3,18 +3,25 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { retrieveContext } from "./retrieve";
 import { generateChat } from "./providers";
 
-export async function answerQuestion(
+const EMPTY_ANSWER =
+  "Bu konuda indekslenmiş not bulamadım. İlgili dersten metin içeren bir PDF not yüklenmişse tekrar dene.";
+
+/**
+ * Soru için RAG bağlamını getirir ve prompt'u kurar.
+ * Bağlam yoksa { empty: true } döner (model çağrısı yapılmaz).
+ * Hem normal hem streaming yol bunu paylaşır (DRY).
+ */
+export async function prepareAnswer(
   admin: SupabaseClient,
   question: string,
   scope: { type: "all" | "course"; courseId?: string | null },
-): Promise<{ answer: string; sources: { noteId: string }[] }> {
+): Promise<
+  | { empty: true; answer: string; sources: [] }
+  | { empty: false; prompt: string; sources: { noteId: string }[] }
+> {
   const context = await retrieveContext(admin, question, scope);
   if (context.length === 0) {
-    return {
-      answer:
-        "Bu konuda indekslenmiş not bulamadım. İlgili dersten metin içeren bir PDF not yüklenmişse tekrar dene.",
-      sources: [],
-    };
+    return { empty: true, answer: EMPTY_ANSWER, sources: [] };
   }
 
   const contextText = context
@@ -32,10 +39,18 @@ export async function answerQuestion(
     `- Mümkünse ilgili kaynak numarasına atıf yap.\n\n` +
     `=== KAYNAKLAR ===\n${contextText}\n\n=== SORU ===\n${question}`;
 
-  // Çoklu-sağlayıcı fallback: Gemini kota verirse Groq/Cerebras/OpenRouter/Mistral'a düşer
-  const { text } = await generateChat(prompt);
-  const answer = text || "Yanıt üretilemedi.";
-
   const sources = [...new Set(context.map((c) => c.noteId))].map((noteId) => ({ noteId }));
-  return { answer, sources };
+  return { empty: false, prompt, sources };
+}
+
+/** Normal (streaming olmayan) yanıt. */
+export async function answerQuestion(
+  admin: SupabaseClient,
+  question: string,
+  scope: { type: "all" | "course"; courseId?: string | null },
+): Promise<{ answer: string; sources: { noteId: string }[] }> {
+  const prep = await prepareAnswer(admin, question, scope);
+  if (prep.empty) return { answer: prep.answer, sources: prep.sources };
+  const { text } = await generateChat(prep.prompt);
+  return { answer: text || "Yanıt üretilemedi.", sources: prep.sources };
 }

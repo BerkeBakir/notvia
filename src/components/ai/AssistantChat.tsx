@@ -84,25 +84,78 @@ export function AssistantChat({
           message,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) {
+
+      // Hata yanıtları JSON gelir; başarılı yanıt SSE akışıdır
+      if (!res.ok || !res.body) {
+        const data = await res.json().catch(() => ({}));
         setNotice(data.error ?? "Hata oluştu.");
         setMessages((m) => m.slice(0, -1));
-      } else {
-        setConversationId(data.conversationId);
-        if (isNew) {
-          setConvList((list) => [
-            { id: data.conversationId, title: message.slice(0, 60), created_at: new Date().toISOString() },
-            ...list,
-          ]);
+        setLoading(false);
+        return;
+      }
+
+      // Boş asistan balonu ekle; akış geldikçe doldur
+      setMessages((m) => [...m, { role: "assistant", content: "" }]);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      let streamErr = "";
+
+      const handle = (evt: Record<string, unknown>) => {
+        if (evt.type === "meta") {
+          if (typeof evt.conversationId === "string") {
+            setConversationId(evt.conversationId);
+            if (isNew) {
+              const cid = evt.conversationId;
+              setConvList((list) => [
+                { id: cid, title: message.slice(0, 60), created_at: new Date().toISOString() },
+                ...list,
+              ]);
+            }
+          }
+          const srcs = evt.sources as { noteId: string }[] | undefined;
+          setMessages((m) => {
+            const copy = [...m];
+            copy[copy.length - 1] = { ...copy[copy.length - 1], sources: srcs };
+            return copy;
+          });
+          if (evt.remaining !== null && evt.remaining !== undefined) {
+            setNotice(`Bugün kalan ücretsiz soru: ${evt.remaining}`);
+          }
+        } else if (evt.type === "delta") {
+          const text = String(evt.text ?? "");
+          setMessages((m) => {
+            const copy = [...m];
+            const last = copy[copy.length - 1];
+            copy[copy.length - 1] = { ...last, content: last.content + text };
+            return copy;
+          });
+        } else if (evt.type === "error") {
+          streamErr = String(evt.error ?? "Hata oluştu.");
         }
-        setMessages((m) => [
-          ...m,
-          { role: "assistant", content: data.answer, sources: data.sources },
-        ]);
-        if (data.remaining !== null && data.remaining !== undefined) {
-          setNotice(`Bugün kalan ücretsiz soru: ${data.remaining}`);
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const frames = buf.split("\n\n");
+        buf = frames.pop() ?? "";
+        for (const frame of frames) {
+          const line = frame.trim();
+          if (!line.startsWith("data:")) continue;
+          try {
+            handle(JSON.parse(line.slice(5).trim()));
+          } catch {
+            // parçalı frame — atla
+          }
         }
+      }
+
+      if (streamErr) {
+        setNotice(streamErr);
+        // boş/yarım asistan balonunu kaldır
+        setMessages((m) => (m[m.length - 1]?.role === "assistant" && !m[m.length - 1].content ? m.slice(0, -1) : m));
       }
     } catch {
       setNotice("Bağlantı hatası.");

@@ -7,19 +7,21 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 interface Provider {
   name: string;
   generate: (prompt: string) => Promise<string>;
+  stream: (prompt: string) => AsyncGenerator<string>;
 }
 
 /** OpenAI-uyumlu (chat/completions) sağlayıcı adaptörü — Groq, OpenRouter, Cerebras, Mistral. */
 function openAiCompatible(name: string, baseUrl: string, apiKey: string, model: string): Provider {
+  const headers = {
+    "content-type": "application/json",
+    authorization: `Bearer ${apiKey}`,
+  };
   return {
     name,
     async generate(prompt: string) {
       const res = await fetch(`${baseUrl}/chat/completions`, {
         method: "POST",
-        headers: {
-          "content-type": "application/json",
-          authorization: `Bearer ${apiKey}`,
-        },
+        headers,
         body: JSON.stringify({
           model,
           messages: [{ role: "user", content: prompt }],
@@ -35,6 +37,45 @@ function openAiCompatible(name: string, baseUrl: string, apiKey: string, model: 
       if (!text) throw new Error(`${name}: boş yanıt`);
       return text;
     },
+    async *stream(prompt: string) {
+      const res = await fetch(`${baseUrl}/chat/completions`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.3,
+          stream: true,
+        }),
+      });
+      if (!res.ok || !res.body) {
+        const body = res.ok ? "gövde yok" : await res.text();
+        throw new Error(`${name} ${res.status}: ${body.slice(0, 200)}`);
+      }
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split("\n");
+        buf = lines.pop() ?? "";
+        for (const line of lines) {
+          const t = line.trim();
+          if (!t.startsWith("data:")) continue;
+          const payload = t.slice(5).trim();
+          if (payload === "[DONE]") return;
+          try {
+            const j = JSON.parse(payload);
+            const delta = j?.choices?.[0]?.delta?.content;
+            if (delta) yield delta as string;
+          } catch {
+            // eksik/parçalı JSON satırı — atla
+          }
+        }
+      }
+    },
   };
 }
 
@@ -48,6 +89,15 @@ function geminiProvider(apiKey: string, model: string): Provider {
       const text = r.response.text();
       if (!text) throw new Error("gemini: boş yanıt");
       return text;
+    },
+    async *stream(prompt: string) {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const m = genAI.getGenerativeModel({ model });
+      const result = await m.generateContentStream(prompt);
+      for await (const chunk of result.stream) {
+        const t = chunk.text();
+        if (t) yield t;
+      }
     },
   };
 }
@@ -95,4 +145,34 @@ export async function generateChat(prompt: string): Promise<{ text: string; prov
     }
   }
   throw new Error("Tüm AI sağlayıcıları başarısız oldu: " + String(lastErr).slice(0, 180));
+}
+
+/**
+ * Streaming sohbet: zincirdeki ilk çalışan sağlayıcının token'larını akıtır.
+ * Bir sağlayıcı HENÜZ token üretmeden hata verirse sıradakine geçilir.
+ * Akış başladıktan sonra bir hata olursa akış sonlanır (sağlayıcı değiştirilemez).
+ */
+export async function* generateChatStream(prompt: string): AsyncGenerator<string> {
+  const chain = buildChain();
+  if (chain.length === 0) throw new Error("Hiçbir AI sağlayıcısı yapılandırılmamış.");
+
+  let lastErr: unknown;
+  for (const p of chain) {
+    let yielded = false;
+    try {
+      for await (const delta of p.stream(prompt)) {
+        yielded = true;
+        yield delta;
+      }
+      return; // başarıyla tamamlandı
+    } catch (err) {
+      lastErr = err;
+      if (yielded) {
+        console.warn(`[ai] "${p.name}" akış ortasında koptu, sonlandırılıyor:`, String(err).slice(0, 180));
+        return;
+      }
+      console.warn(`[ai] "${p.name}" akış başlamadan başarısız, sıradakine geçiliyor:`, String(err).slice(0, 180));
+    }
+  }
+  throw new Error("Tüm AI sağlayıcıları (akış) başarısız: " + String(lastErr).slice(0, 180));
 }
