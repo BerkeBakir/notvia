@@ -50,11 +50,35 @@ const SUGGESTIONS = [
 ];
 
 interface Output {
-  id: number;
+  id: string;
   label: string;
   sourceCount: number;
   result: StudioResult;
   provider?: string;
+  createdAt: string;
+}
+
+/** DB satırından (server'dan gelen) Output'a dönüştürür. */
+export interface StudioOutputRow {
+  id: string;
+  kind: StudioKind;
+  source_count: number;
+  result: StudioResult;
+  provider: string | null;
+  created_at: string;
+}
+function labelForKind(kind: StudioKind): string {
+  return STUDIO.find((s) => s.kind === kind)?.label ?? kind;
+}
+function rowToOutput(r: StudioOutputRow): Output {
+  return {
+    id: r.id,
+    label: labelForKind(r.kind),
+    sourceCount: r.source_count,
+    result: r.result,
+    provider: r.provider ?? undefined,
+    createdAt: r.created_at,
+  };
 }
 
 type Tab = "sources" | "chat" | "studio";
@@ -65,11 +89,13 @@ export function CourseStudy({
   courseName,
   sources,
   loggedIn,
+  initialOutputs = [],
 }: {
   courseId: string;
   courseName: string;
   sources: StudySource[];
   loggedIn: boolean;
+  initialOutputs?: StudioOutputRow[];
 }) {
   const usable = useMemo(() => sources.filter((s) => s.aiIndexed), [sources]);
   const [selected, setSelected] = useState<Set<string>>(() => new Set(usable.map((s) => s.id)));
@@ -78,8 +104,8 @@ export function CourseStudy({
   const { messages, loading, notice, setNotice, showUpsell, setShowUpsell, send } = useChatStream();
 
   const [busyKind, setBusyKind] = useState<StudioKind | null>(null);
-  const [outputs, setOutputs] = useState<Output[]>([]);
-  const [openId, setOpenId] = useState<number | null>(null);
+  const [outputs, setOutputs] = useState<Output[]>(() => initialOutputs.map(rowToOutput));
+  const [openId, setOpenId] = useState<string | null>(null);
   const [studioError, setStudioError] = useState("");
 
   const titles = useMemo(() => Object.fromEntries(sources.map((s) => [s.id, s.title])), [sources]);
@@ -142,11 +168,12 @@ export function CourseStudy({
         else setStudioError(data.error ?? "Üretilemedi.");
       } else {
         const out: Output = {
-          id: Date.now(),
+          id: data.id ?? crypto.randomUUID(),
           label,
           sourceCount: noteIds.length,
           result: data.result,
           provider: data.provider,
+          createdAt: data.createdAt ?? new Date().toISOString(),
         };
         setOutputs((o) => [out, ...o]);
         setOpenId(out.id);
@@ -318,7 +345,7 @@ export function CourseStudy({
                 >
                   <span className="font-medium text-foreground">{o.label}</span>
                   <span className="text-muted">
-                    {new Date(o.id).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                    {new Date(o.createdAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </button>
               ))}

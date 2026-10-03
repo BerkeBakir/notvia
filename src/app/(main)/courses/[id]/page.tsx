@@ -7,7 +7,7 @@ import { NoteCard } from "@/components/notes/NoteCard";
 import { NotificationToggle } from "@/components/notes/NotificationToggle";
 import { VerifyButton } from "@/components/notes/VerifyButton";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { CourseStudy, type StudySource } from "@/components/study/CourseStudy";
+import { CourseStudy, type StudySource, type StudioOutputRow } from "@/components/study/CourseStudy";
 
 export async function generateMetadata({
   params,
@@ -88,6 +88,18 @@ export default async function CoursePage({
     aiIndexed: r.ai_indexed ?? null,
   }));
 
+  let studioOutputs: StudioOutputRow[] = [];
+  if (user) {
+    const { data: outRows } = await supabase
+      .from("ai_studio_outputs")
+      .select("id,kind,source_count,result,provider,created_at")
+      .eq("course_id", course.id)
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(30);
+    studioOutputs = (outRows ?? []) as StudioOutputRow[];
+  }
+
   const notes = (noteRows ?? [])
     .map(mapNoteRow)
     .sort((a, b) => b.likes - a.likes);
@@ -161,6 +173,7 @@ export default async function CoursePage({
         courseName={course.name}
         sources={studySources}
         loggedIn={!!user}
+        initialOutputs={studioOutputs}
       />
 
       {notes.length === 0 ? (

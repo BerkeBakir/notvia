@@ -109,12 +109,14 @@ export async function POST(request: NextRequest) {
       send({ type: "meta", conversationId, sources: prep.sources, remaining });
 
       let full = "";
+      let providerInfo: { provider: string; model: string } | null = null;
       if (prep.empty) {
         full = prep.answer;
         send({ type: "delta", text: full });
       } else {
         try {
           const onProvider = (info: { provider: string; model: string }) => {
+            providerInfo = info;
             console.info(`[ai] yanıtlayan sağlayıcı: ${info.provider} (${info.model})`);
             send({ type: "provider", ...info });
           };
@@ -143,6 +145,7 @@ export async function POST(request: NextRequest) {
         role: "assistant",
         content: full,
         sources: prep.sources,
+        provider: providerInfo,
       });
 
       send({ type: "done" });

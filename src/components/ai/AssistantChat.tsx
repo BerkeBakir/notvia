@@ -51,14 +51,15 @@ export function AssistantChat({
     if (id === conversationId) return;
     const { data } = await supabase
       .from("ai_messages")
-      .select("role,content,sources")
+      .select("role,content,sources,provider")
       .eq("conversation_id", id)
       .order("created_at", { ascending: true });
     setMessages(
       (data ?? []).map((m) => ({
         role: m.role,
         content: m.content,
-        sources: (m.sources as { noteId: string }[] | null) ?? undefined,
+        sources: (m.sources as { noteId: string; snippet?: string }[] | null) ?? undefined,
+        provider: (m.provider as { provider: string; model: string } | null) ?? undefined,
       })),
     );
     setConversationId(id);

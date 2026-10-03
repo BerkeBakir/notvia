@@ -66,9 +66,24 @@ export async function POST(request: NextRequest) {
     try {
       const { text: raw, provider } = await generateChat(prompt);
       const result = parseStudioOutput(kind, raw);
+      // Kalıcı kaydet (yenilemede kaybolmasın)
+      const { data: saved } = await admin
+        .from("ai_studio_outputs")
+        .insert({
+          user_id: user.id,
+          course_id: body.courseId,
+          kind,
+          source_count: noteIds.length,
+          result,
+          provider,
+        })
+        .select("id,created_at")
+        .single();
       return NextResponse.json({
         result,
         provider,
+        id: saved?.id ?? null,
+        createdAt: saved?.created_at ?? new Date().toISOString(),
         remaining: quota.remaining === Infinity ? null : quota.remaining,
       });
     } catch (err) {

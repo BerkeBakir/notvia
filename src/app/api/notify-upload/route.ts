@@ -71,16 +71,16 @@ export async function POST(request: NextRequest) {
       await sendBrevoEmail({
         to: r.email,
         toName: r.name ?? undefined,
-        subject: `📚 ${courseName} dersine yeni ${kind} eklendi`,
+        subject: `${courseName} dersine yeni ${kind} eklendi`,
         html: `
           <div style="font-family:sans-serif;max-width:480px;margin:auto">
-            <h2 style="color:#0b1d3a">Notvia</h2>
+            <h2 style="color:#047857">Notvia</h2>
             <p>Merhaba ${r.name ?? ""},</p>
             <p><b>${courseName}</b> dersine yeni bir ${kind} eklendi:</p>
             <p style="font-size:18px"><b>${note.title}</b></p>
             <p>
               <a href="${courseUrl}"
-                 style="display:inline-block;background:#2dd4cf;color:#04121f;
+                 style="display:inline-block;background:#047857;color:#ffffff;
                         padding:10px 18px;border-radius:8px;text-decoration:none;
                         font-weight:600">
                 İçeriği Gör
