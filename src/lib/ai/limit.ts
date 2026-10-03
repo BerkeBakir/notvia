@@ -1,11 +1,20 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const FREE_DAILY_LIMIT = 5;
+export const PREMIUM_DAILY_LIMIT = 50;
+
+/** Plana göre günlük AI soru limiti. Pro = Infinity. */
+export function dailyLimitFor(plan: string): number {
+  if (plan === "pro") return Infinity;
+  if (plan === "premium") return PREMIUM_DAILY_LIMIT;
+  return FREE_DAILY_LIMIT;
+}
 
 /** Plana ve bugünkü kullanıma göre kalan soru hakkı. Pro = Infinity. */
 export function remainingFor(plan: string, usedToday: number): number {
-  if (plan === "pro") return Infinity;
-  return Math.max(0, FREE_DAILY_LIMIT - usedToday);
+  const limit = dailyLimitFor(plan);
+  if (limit === Infinity) return Infinity;
+  return Math.max(0, limit - usedToday);
 }
 
 /**
@@ -22,7 +31,7 @@ export async function consumeDailyQuota(
 
   const { data, error } = await admin.rpc("consume_ai_quota", {
     p_user: userId,
-    p_limit: FREE_DAILY_LIMIT,
+    p_limit: dailyLimitFor(plan),
   });
   if (error) throw new Error("Kota kontrolü başarısız: " + error.message);
 

@@ -43,7 +43,12 @@ export async function POST(request: NextRequest) {
     const quota = await consumeDailyQuota(admin, user.id, user.plan);
     if (!quota.allowed) {
       return NextResponse.json(
-        { error: "Günlük ücretsiz soru hakkın doldu. Pro'ya geçerek sınırsız sor.", remaining: 0 },
+        {
+          error: "Günlük soru hakkın doldu.",
+          remaining: 0,
+          limitReached: true,
+          plan: user.plan,
+        },
         { status: 429 },
       );
     }
