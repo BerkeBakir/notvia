@@ -3,14 +3,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { PaperPlaneRight, Sparkle, LinkSimple, Plus, ChatsCircle, X, Check } from "@phosphor-icons/react";
+import { PaperPlaneRight, Sparkle, LinkSimple, Plus, ChatsCircle } from "@phosphor-icons/react";
 import { createClient } from "@/lib/supabase/client";
-
-interface Msg {
-  role: "user" | "assistant";
-  content: string;
-  sources?: { noteId: string }[];
-}
+import { useChatStream } from "@/components/ai/useChatStream";
+import { AiUpsellModal } from "@/components/ai/AiUpsellModal";
 
 interface Conversation {
   id: string;
@@ -26,29 +22,33 @@ export function AssistantChat({
   conversations: Conversation[];
 }) {
   const supabase = createClient();
+  const {
+    messages,
+    setMessages,
+    loading,
+    notice,
+    showUpsell,
+    setShowUpsell,
+    conversationId,
+    setConversationId,
+    send,
+  } = useChatStream();
+
   const [convList, setConvList] = useState<Conversation[]>(conversations);
   const [scopeType, setScopeType] = useState<"all" | "course">("all");
   const [courseId, setCourseId] = useState<string>("");
-  const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<string>("");
-  const [notice, setNotice] = useState("");
-  const [showUpsell, setShowUpsell] = useState(false);
 
   const missingCourse = scopeType === "course" && !courseId;
 
   function newChat() {
     setConversationId("");
     setMessages([]);
-    setNotice("");
     setInput("");
   }
 
   async function openConversation(id: string) {
     if (id === conversationId) return;
-    setLoading(true);
-    setNotice("");
     const { data } = await supabase
       .from("ai_messages")
       .select("role,content,sources")
@@ -62,112 +62,16 @@ export function AssistantChat({
       })),
     );
     setConversationId(id);
-    setLoading(false);
   }
 
-  async function send(e: React.FormEvent) {
+  function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const message = input.trim();
-    if (!message || loading || missingCourse) return;
-    const isNew = !conversationId;
+    if (missingCourse) return;
+    const msg = input;
     setInput("");
-    setNotice("");
-    setMessages((m) => [...m, { role: "user", content: message }]);
-    setLoading(true);
-    try {
-      const res = await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          conversationId: conversationId || undefined,
-          scopeType,
-          scopeCourseId: scopeType === "course" ? courseId : null,
-          message,
-        }),
-      });
-
-      // Hata yanıtları JSON gelir; başarılı yanıt SSE akışıdır
-      if (!res.ok || !res.body) {
-        const data = await res.json().catch(() => ({}));
-        if (res.status === 429 || data.limitReached) {
-          setShowUpsell(true);
-          setNotice("");
-        } else {
-          setNotice(data.error ?? "Hata oluştu.");
-        }
-        setMessages((m) => m.slice(0, -1));
-        setLoading(false);
-        return;
-      }
-
-      // Boş asistan balonu ekle; akış geldikçe doldur
-      setMessages((m) => [...m, { role: "assistant", content: "" }]);
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buf = "";
-      let streamErr = "";
-
-      const handle = (evt: Record<string, unknown>) => {
-        if (evt.type === "meta") {
-          if (typeof evt.conversationId === "string") {
-            setConversationId(evt.conversationId);
-            if (isNew) {
-              const cid = evt.conversationId;
-              setConvList((list) => [
-                { id: cid, title: message.slice(0, 60), created_at: new Date().toISOString() },
-                ...list,
-              ]);
-            }
-          }
-          const srcs = evt.sources as { noteId: string }[] | undefined;
-          setMessages((m) => {
-            const copy = [...m];
-            copy[copy.length - 1] = { ...copy[copy.length - 1], sources: srcs };
-            return copy;
-          });
-          if (evt.remaining !== null && evt.remaining !== undefined) {
-            setNotice(`Bugün kalan ücretsiz soru: ${evt.remaining}`);
-          }
-        } else if (evt.type === "delta") {
-          const text = String(evt.text ?? "");
-          setMessages((m) => {
-            const copy = [...m];
-            const last = copy[copy.length - 1];
-            copy[copy.length - 1] = { ...last, content: last.content + text };
-            return copy;
-          });
-        } else if (evt.type === "error") {
-          streamErr = String(evt.error ?? "Hata oluştu.");
-        }
-      };
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += decoder.decode(value, { stream: true });
-        const frames = buf.split("\n\n");
-        buf = frames.pop() ?? "";
-        for (const frame of frames) {
-          const line = frame.trim();
-          if (!line.startsWith("data:")) continue;
-          try {
-            handle(JSON.parse(line.slice(5).trim()));
-          } catch {
-            // parçalı frame — atla
-          }
-        }
-      }
-
-      if (streamErr) {
-        setNotice(streamErr);
-        // boş/yarım asistan balonunu kaldır
-        setMessages((m) => (m[m.length - 1]?.role === "assistant" && !m[m.length - 1].content ? m.slice(0, -1) : m));
-      }
-    } catch {
-      setNotice("Bağlantı hatası.");
-      setMessages((m) => m.slice(0, -1));
-    }
-    setLoading(false);
+    send(msg, { type: scopeType, courseId }, (id, title) =>
+      setConvList((list) => [{ id, title, created_at: new Date().toISOString() }, ...list]),
+    );
   }
 
   return (
@@ -209,12 +113,8 @@ export function AssistantChat({
         <div className="flex items-center gap-3">
           <Sparkle size={28} weight="duotone" className="text-primary" />
           <div>
-            <h1 className="font-heading text-2xl font-bold text-foreground">
-              Çalışma Arkadaşı
-            </h1>
-            <p className="text-sm text-muted">
-              Platformdaki notlara dayanarak sorularını yanıtlar.
-            </p>
+            <h1 className="font-heading text-2xl font-bold text-foreground">Çalışma Arkadaşı</h1>
+            <p className="text-sm text-muted">Platformdaki notlara dayanarak sorularını yanıtlar.</p>
           </div>
         </div>
 
@@ -264,10 +164,7 @@ export function AssistantChat({
             </p>
           )}
           {messages.map((m, i) => (
-            <div
-              key={i}
-              className={m.role === "user" ? "flex justify-end" : "flex justify-start"}
-            >
+            <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
               <div
                 className={
                   m.role === "user"
@@ -295,12 +192,10 @@ export function AssistantChat({
           {loading && <p className="text-sm text-muted">Düşünüyor...</p>}
         </div>
 
-        {missingCourse && (
-          <p className="text-center text-xs text-muted">Önce bir ders seç.</p>
-        )}
+        {missingCourse && <p className="text-center text-xs text-muted">Önce bir ders seç.</p>}
         {notice && <p className="text-center text-xs text-muted">{notice}</p>}
 
-        <form onSubmit={send} className="flex gap-2">
+        <form onSubmit={onSubmit} className="flex gap-2">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -318,64 +213,7 @@ export function AssistantChat({
         </form>
       </div>
 
-      {showUpsell && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-          onClick={() => setShowUpsell(false)}
-        >
-          <div
-            className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              aria-label="Kapat"
-              onClick={() => setShowUpsell(false)}
-              className="absolute right-4 top-4 text-muted hover:text-foreground"
-            >
-              <X size={20} />
-            </button>
-            <Sparkle size={32} weight="duotone" className="text-primary" />
-            <h2 className="mt-3 font-heading text-xl font-bold text-foreground">
-              Günlük soru hakkın doldu
-            </h2>
-            <p className="mt-1 text-sm text-muted">
-              Daha fazla soru sormak için üyeliğini yükselt.
-            </p>
-
-            <div className="mt-5 space-y-3">
-              <div className="rounded-xl border border-border p-4">
-                <div className="flex items-baseline justify-between">
-                  <span className="font-heading font-bold text-foreground">Premium</span>
-                  <span className="text-sm text-muted">$5 / ay</span>
-                </div>
-                <p className="mt-1 flex items-center gap-1.5 text-sm text-muted">
-                  <Check size={14} weight="bold" className="text-primary" /> Günde 50 AI sorusu + reklamsız
-                </p>
-              </div>
-              <div className="rounded-xl border-2 border-primary p-4">
-                <div className="flex items-baseline justify-between">
-                  <span className="font-heading font-bold text-foreground">Pro</span>
-                  <span className="text-sm text-muted">$12 / ay</span>
-                </div>
-                <p className="mt-1 flex items-center gap-1.5 text-sm text-muted">
-                  <Check size={14} weight="bold" className="text-primary" /> Sınırsız AI + tüm AI araçları
-                </p>
-              </div>
-            </div>
-
-            <Link
-              href="/premium"
-              className="mt-5 block w-full rounded-full bg-primary px-5 py-2.5 text-center text-sm font-medium text-primary-foreground hover:opacity-90"
-            >
-              Planları Gör
-            </Link>
-            <p className="mt-2 text-center text-xs text-muted">
-              Yıllık planda 2 ay bedava
-            </p>
-          </div>
-        </div>
-      )}
+      {showUpsell && <AiUpsellModal onClose={() => setShowUpsell(false)} />}
     </div>
   );
 }

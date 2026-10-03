@@ -7,6 +7,7 @@ import { NoteCard } from "@/components/notes/NoteCard";
 import { NotificationToggle } from "@/components/notes/NotificationToggle";
 import { VerifyButton } from "@/components/notes/VerifyButton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { CourseAssistant } from "@/components/ai/CourseAssistant";
 
 export async function generateMetadata({
   params,
@@ -147,6 +148,8 @@ export default async function CoursePage({
           initialSubscribed={subscribed}
         />
       </div>
+
+      <CourseAssistant courseId={course.id} loggedIn={!!user} />
 
       {notes.length === 0 ? (
         <EmptyState
