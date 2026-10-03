@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { proNoteGuard } from "@/lib/ai/guard";
 import { geminiFromPdf } from "@/lib/ai/gemini";
 
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const { noteId, question } = body;
