@@ -4,7 +4,7 @@ import { extractPdfText } from "./pdf-text";
 import { chunkText } from "./chunk";
 import { embedTexts } from "./embed";
 
-const MAX_PDF_BYTES = 15 * 1024 * 1024;
+const MAX_PDF_BYTES = 40 * 1024 * 1024;
 
 export async function indexNote(
   admin: SupabaseClient,

@@ -15,7 +15,7 @@ interface Course extends Option {
   department_id: string;
 }
 
-const MAX_SIZE = 20 * 1024 * 1024; // 20MB (ücretsiz plan limiti)
+const MAX_SIZE = 40 * 1024 * 1024; // 40MB
 
 export function UploadForm({
   userId,
@@ -92,7 +92,7 @@ export function UploadForm({
         return;
       }
       if (f.size > MAX_SIZE) {
-        setError("Dosya boyutu en fazla 20MB olabilir.");
+        setError("Dosya boyutu en fazla 40MB olabilir.");
         e.target.value = "";
         setFile(null);
         return;
@@ -293,7 +293,7 @@ export function UploadForm({
           className="block w-full text-sm text-muted file:mr-4 file:rounded-lg file:border-0 file:bg-primary file:px-4 file:py-2 file:font-medium file:text-primary-foreground hover:file:opacity-90"
         />
         <p className="mt-1 text-xs text-muted">
-          Yalnızca PDF · en fazla 20MB
+          Yalnızca PDF · en fazla 40MB
         </p>
       </div>
 
