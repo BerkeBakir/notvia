@@ -61,13 +61,13 @@ function buildChain(): Provider[] {
     chain.push(geminiProvider(e.GEMINI_API_KEY, e.GEMINI_CHAT_MODEL || "gemini-2.5-flash"));
   }
   if (e.GROQ_API_KEY) {
-    chain.push(openAiCompatible("groq", "https://api.groq.com/openai/v1", e.GROQ_API_KEY, e.GROQ_MODEL || "llama-3.3-70b-versatile"));
+    chain.push(openAiCompatible("groq", "https://api.groq.com/openai/v1", e.GROQ_API_KEY, e.GROQ_MODEL || "openai/gpt-oss-120b"));
   }
   if (e.CEREBRAS_API_KEY) {
-    chain.push(openAiCompatible("cerebras", "https://api.cerebras.ai/v1", e.CEREBRAS_API_KEY, e.CEREBRAS_MODEL || "llama-3.3-70b"));
+    chain.push(openAiCompatible("cerebras", "https://api.cerebras.ai/v1", e.CEREBRAS_API_KEY, e.CEREBRAS_MODEL || "qwen-3.8-27b"));
   }
   if (e.OPENROUTER_API_KEY) {
-    chain.push(openAiCompatible("openrouter", "https://openrouter.ai/api/v1", e.OPENROUTER_API_KEY, e.OPENROUTER_MODEL || "qwen/qwen-2.5-72b-instruct:free"));
+    chain.push(openAiCompatible("openrouter", "https://openrouter.ai/api/v1", e.OPENROUTER_API_KEY, e.OPENROUTER_MODEL || "qwen/qwen3.8-27b:free"));
   }
   if (e.MISTRAL_API_KEY) {
     chain.push(openAiCompatible("mistral", "https://api.mistral.ai/v1", e.MISTRAL_API_KEY, e.MISTRAL_MODEL || "mistral-small-latest"));
