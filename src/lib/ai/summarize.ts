@@ -11,8 +11,14 @@ export async function summarizePdf(
 ): Promise<string | null> {
   return geminiFromPdf(
     fileUrl,
-    `"${title}" başlıklı bu üniversite ders notunu Türkçe olarak özetle. ` +
-      `Ana konuları, önemli tanımları ve varsa formülleri madde işaretleriyle ` +
-      `vurgula. Yalnızca özeti yaz, ekstra açıklama ekleme.`,
+    `"${title}" başlıklı bu üniversite ders notunu sınava çalışan bir öğrenci için ` +
+      `Türkçe özetle. Markdown kullan ve şu yapıyı izle (notta karşılığı olmayan ` +
+      `bölümü atla):\n` +
+      `## Genel Bakış\n1-2 cümle: not neyi kapsıyor.\n` +
+      `## Ana Konular\nHer konu için kısa madde; alt başlıklar gerekiyorsa ### kullan.\n` +
+      `## Önemli Tanımlar\n- **Terim**: kısa tanım\n` +
+      `## Formüller ve Kurallar\nVarsa satır içi kod biçiminde.\n` +
+      `## Sınav İçin Kritik Noktalar\n3-6 madde.\n` +
+      `Tablo ve HTML kullanma, kısa ve taranabilir yaz. Yalnızca özeti yaz, ekstra açıklama ekleme.`,
   );
 }

@@ -42,7 +42,8 @@ export async function POST(request: NextRequest) {
       .select("summary")
       .eq("note_id", noteId)
       .maybeSingle();
-    if (cached) {
+    // Başlıklı (yeni biçim) olmayan eski özetler bir kez yeniden üretilir (upsert ile güncellenir)
+    if (cached && cached.summary.includes("## ")) {
       return NextResponse.json({ summary: cached.summary, cached: true });
     }
   }

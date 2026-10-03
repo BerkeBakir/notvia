@@ -233,7 +233,7 @@ export default async function NoteDetailPage({
           PDF&apos;i Görüntüle
         </a>
 
-        <AiSummary noteId={note.id} isPro={user?.plan === "pro"} />
+        <AiSummary noteId={note.id} isPro={user?.plan === "pro"} title={note.title} />
 
         <div className="mt-4 border-t border-border pt-3">
           <ReportButton noteId={note.id} userId={user?.id ?? null} />
