@@ -9,7 +9,8 @@ for (const l of readFileSync(new URL("../.env.local", import.meta.url), "utf8").
   const m = l.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/); if (m) env[m[1]] = m[2].replace(/^["']|["']$/g, "");
 }
 const admin = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
-const embedModel = new GoogleGenerativeAI(env.GEMINI_API_KEY).getGenerativeModel({ model: "text-embedding-004" });
+const embedModel = new GoogleGenerativeAI(env.GEMINI_API_KEY).getGenerativeModel({ model: "gemini-embedding-001" });
+const embed = (text) => embedModel.embedContent({ content: { role: "user", parts: [{ text }] }, outputDimensionality: 768 });
 
 function chunkText(text, size = 1500, overlap = 200) {
   const clean = text.trim(); if (!clean) return [];
@@ -37,7 +38,7 @@ for (const note of notes ?? []) {
     await admin.from("note_chunks").delete().eq("note_id", note.id);
     const rows = [];
     for (const c of chunks) {
-      const e = await embedModel.embedContent(c);
+      const e = await embed(c);
       rows.push({ note_id: note.id, course_id: note.course_id, content: `${note.title}\n\n${c}`, embedding: JSON.stringify(e.embedding.values) });
     }
     await admin.from("note_chunks").insert(rows);

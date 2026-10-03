@@ -1,7 +1,8 @@
 // src/lib/ai/embed.ts
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const EMBED_MODEL = "text-embedding-004";
+const EMBED_MODEL = "gemini-embedding-001";
+const EMBED_DIM = 768;
 
 function client() {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -12,7 +13,10 @@ function client() {
 /** Tek bir metni 768 boyutlu vektöre çevirir. */
 export async function embedText(text: string): Promise<number[]> {
   const model = client();
-  const res = await model.embedContent(text);
+  const res = await model.embedContent({
+    content: { role: "user", parts: [{ text }] },
+    outputDimensionality: EMBED_DIM,
+  });
   return res.embedding.values;
 }
 
