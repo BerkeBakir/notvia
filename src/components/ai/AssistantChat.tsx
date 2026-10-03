@@ -2,11 +2,11 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { PaperPlaneRight, Sparkle, LinkSimple, Plus, ChatsCircle } from "@phosphor-icons/react";
+import { PaperPlaneRight, Sparkle, Plus, ChatsCircle } from "@phosphor-icons/react";
 import { createClient } from "@/lib/supabase/client";
 import { useChatStream } from "@/components/ai/useChatStream";
 import { AiUpsellModal } from "@/components/ai/AiUpsellModal";
+import { ChatMessages } from "@/components/ai/ChatMessages";
 
 interface Conversation {
   id: string;
@@ -157,40 +157,17 @@ export function AssistantChat({
           )}
         </div>
 
-        <div className="min-h-[300px] space-y-4 rounded-2xl border border-border bg-card p-4">
-          {messages.length === 0 && (
+        <ChatMessages
+          messages={messages}
+          loading={loading}
+          bubbleClassName="bg-background"
+          className="h-[60vh] min-h-[320px] rounded-2xl border border-border bg-card p-4"
+          empty={
             <p className="py-10 text-center text-sm text-muted">
               Bir soru sorarak başla. Örn: &quot;Veri Yapıları&apos;nda ağaçlar nasıl çalışır?&quot;
             </p>
-          )}
-          {messages.map((m, i) => (
-            <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
-              <div
-                className={
-                  m.role === "user"
-                    ? "max-w-[80%] rounded-2xl rounded-tr-sm bg-primary px-4 py-2 text-sm text-primary-foreground"
-                    : "max-w-[80%] rounded-2xl rounded-tl-sm border border-border bg-background px-4 py-2 text-sm text-foreground"
-                }
-              >
-                <p className="whitespace-pre-wrap">{m.content}</p>
-                {m.sources && m.sources.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2 border-t border-border pt-2">
-                    {m.sources.map((s, j) => (
-                      <Link
-                        key={s.noteId}
-                        href={`/notes/${s.noteId}`}
-                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                      >
-                        <LinkSimple size={12} /> Kaynak {j + 1}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-          {loading && <p className="text-sm text-muted">Düşünüyor...</p>}
-        </div>
+          }
+        />
 
         {missingCourse && <p className="text-center text-xs text-muted">Önce bir ders seç.</p>}
         {notice && <p className="text-center text-xs text-muted">{notice}</p>}

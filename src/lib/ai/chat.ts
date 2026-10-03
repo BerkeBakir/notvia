@@ -36,7 +36,9 @@ export async function prepareAnswer(
     `("Sen Notvia" gibi ifadeler kullanma).\n` +
     `- Yalnızca verilen kaynaklardaki bilgilere dayan. Kaynaklarda yoksa ` +
     `"Notlarda bu bilgi yok" de ve kesinlikle uydurma.\n` +
-    `- Mümkünse ilgili kaynak numarasına atıf yap.\n\n` +
+    `- Mümkünse ilgili kaynak numarasına atıf yap.\n` +
+    `- Biçim: Markdown kullan; kısa başlıklar (##), madde listeleri (-) ve önemli ` +
+    `terimler için **kalın** yaz. Tablo ve HTML kullanma, paragrafları kısa tut.\n\n` +
     `=== KAYNAKLAR ===\n${contextText}\n\n=== SORU ===\n${question}`;
 
   const sources = [...new Set(context.map((c) => c.noteId))].map((noteId) => ({ noteId }));

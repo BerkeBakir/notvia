@@ -3,9 +3,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { PaperPlaneRight, Sparkle, LinkSimple, ListChecks, Exam, TextAlignLeft } from "@phosphor-icons/react";
+import { PaperPlaneRight, Sparkle, ListChecks, Exam, TextAlignLeft } from "@phosphor-icons/react";
 import { useChatStream } from "@/components/ai/useChatStream";
 import { AiUpsellModal } from "@/components/ai/AiUpsellModal";
+import { ChatMessages } from "@/components/ai/ChatMessages";
 
 const QUICK_ACTIONS = [
   { Icon: ListChecks, label: "Çalışma planı", prompt: "Bu dersin notlarına dayanarak sınava hazırlanmam için adım adım bir çalışma planı oluştur. Konuları önem sırasına göre sırala." },
@@ -68,35 +69,11 @@ export function CourseAssistant({
       </div>
 
       {messages.length > 0 && (
-        <div className="mt-4 max-h-[420px] space-y-4 overflow-y-auto rounded-xl border border-border bg-background/40 p-4">
-          {messages.map((m, i) => (
-            <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
-              <div
-                className={
-                  m.role === "user"
-                    ? "max-w-[85%] rounded-2xl rounded-tr-sm bg-primary px-4 py-2 text-sm text-primary-foreground"
-                    : "max-w-[85%] rounded-2xl rounded-tl-sm border border-border bg-card px-4 py-2 text-sm text-foreground"
-                }
-              >
-                <p className="whitespace-pre-wrap">{m.content}</p>
-                {m.sources && m.sources.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2 border-t border-border pt-2">
-                    {m.sources.map((s, j) => (
-                      <Link
-                        key={s.noteId}
-                        href={`/notes/${s.noteId}`}
-                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                      >
-                        <LinkSimple size={12} /> Kaynak {j + 1}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-          {loading && <p className="text-sm text-muted">Düşünüyor...</p>}
-        </div>
+        <ChatMessages
+          messages={messages}
+          loading={loading}
+          className="mt-4 max-h-[480px] rounded-xl border border-border bg-background/40 p-4"
+        />
       )}
 
       {notice && <p className="mt-2 text-center text-xs text-muted">{notice}</p>}

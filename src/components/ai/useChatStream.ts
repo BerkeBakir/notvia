@@ -6,6 +6,8 @@ export interface ChatMsg {
   role: "user" | "assistant";
   content: string;
   sources?: { noteId: string }[];
+  /** Yanıtı üreten sağlayıcı/model (yalnızca canlı akışta bilinir). */
+  provider?: { provider: string; model: string };
 }
 
 export interface ChatScope {
@@ -78,6 +80,13 @@ export function useChatStream() {
           if (evt.remaining !== null && evt.remaining !== undefined) {
             setNotice(`Bugün kalan ücretsiz soru: ${evt.remaining}`);
           }
+        } else if (evt.type === "provider") {
+          const provider = { provider: String(evt.provider ?? ""), model: String(evt.model ?? "") };
+          setMessages((m) => {
+            const copy = [...m];
+            copy[copy.length - 1] = { ...copy[copy.length - 1], provider };
+            return copy;
+          });
         } else if (evt.type === "delta") {
           const t = String(evt.text ?? "");
           setMessages((m) => {
