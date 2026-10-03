@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { indexNote } from "@/lib/ai/ingest";
 
-export const maxDuration = 60;
+// OCR (taranmış PDF) ve embedding zaman alabilir
+export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
   // Yalnızca giriş yapmış kullanıcı tetikleyebilir

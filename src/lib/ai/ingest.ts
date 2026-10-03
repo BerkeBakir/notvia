@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { extractPdfText } from "./pdf-text";
 import { chunkText } from "./chunk";
 import { embedTexts } from "./embed";
+import { ocrPdf, pdfPageCount } from "./ocr";
 
 const MAX_PDF_BYTES = 40 * 1024 * 1024;
 
@@ -29,8 +30,21 @@ export async function indexNote(
     return { indexed: false, chunks: 0 };
   }
 
-  const text = await extractPdfText(buf);
-  const chunks = chunkText(text);
+  let fullText = (await extractPdfText(buf)).trim();
+
+  // Taranmış (görüntü) PDF tespiti: sayfa başına metin yoğunluğu düşükse
+  // Gemini OCR ile metni çıkar (sayfa gruplarına bölerek). Metni bol olan
+  // PDF'lerde çalışmaz — boşuna kota harcanmaz.
+  if (process.env.GEMINI_API_KEY) {
+    const pages = await pdfPageCount(buf);
+    const scanned = fullText.length < 400 || (pages > 0 && fullText.length / pages < 80);
+    if (scanned) {
+      const ocrText = await ocrPdf(buf);
+      if (ocrText) fullText = `${fullText}\n\n${ocrText}`.trim();
+    }
+  }
+
+  const chunks = chunkText(fullText);
   if (chunks.length === 0) {
     await admin.from("notes").update({ ai_indexed: false }).eq("id", note.id);
     return { indexed: false, chunks: 0 };
