@@ -14,10 +14,20 @@ export default async function AssistantPage() {
   if (!user) redirect("/login?next=/asistan");
 
   const supabase = await createClient();
-  const { data: courses } = await supabase
-    .from("courses")
-    .select("id,name")
-    .order("name");
+  const [{ data: courses }, { data: conversations }] = await Promise.all([
+    supabase.from("courses").select("id,name").order("name"),
+    supabase
+      .from("ai_conversations")
+      .select("id,title,created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(50),
+  ]);
 
-  return <AssistantChat courses={courses ?? []} />;
+  return (
+    <AssistantChat
+      courses={courses ?? []}
+      conversations={conversations ?? []}
+    />
+  );
 }

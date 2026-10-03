@@ -2,7 +2,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { checkDailyLimit } from "@/lib/ai/limit";
+import { consumeDailyQuota, refundDailyQuota } from "@/lib/ai/limit";
 import { answerQuestion } from "@/lib/ai/chat";
 
 export const maxDuration = 60;
@@ -33,8 +33,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Geçerli bir ders seç." }, { status: 400 });
   }
 
-  const limit = await checkDailyLimit(admin, user.id, user.plan);
-  if (!limit.allowed) {
+  // Atomik kota tüketimi (yarış-durumuna karşı). Başarısızlıkta iade edilir.
+  const quota = await consumeDailyQuota(admin, user.id, user.plan);
+  if (!quota.allowed) {
     return NextResponse.json(
       { error: "Günlük ücretsiz soru hakkın doldu. Pro'ya geçerek sınırsız sor.", remaining: 0 },
       { status: 429 },
@@ -45,6 +46,7 @@ export async function POST(request: NextRequest) {
   let conversationId = "";
   if (body.conversationId) {
     if (!isUuid(body.conversationId)) {
+      await refundDailyQuota(admin, user.id, user.plan);
       return NextResponse.json({ error: "Sohbet bulunamadı." }, { status: 404 });
     }
     const { data: existing } = await admin
@@ -54,6 +56,7 @@ export async function POST(request: NextRequest) {
       .eq("user_id", user.id)
       .maybeSingle();
     if (!existing) {
+      await refundDailyQuota(admin, user.id, user.plan);
       return NextResponse.json({ error: "Sohbet bulunamadı." }, { status: 404 });
     }
     conversationId = existing.id;
@@ -69,6 +72,7 @@ export async function POST(request: NextRequest) {
       .select("id")
       .single();
     if (error || !conv) {
+      await refundDailyQuota(admin, user.id, user.plan);
       return NextResponse.json({ error: "Sohbet oluşturulamadı." }, { status: 500 });
     }
     conversationId = conv.id;
@@ -82,6 +86,7 @@ export async function POST(request: NextRequest) {
     sources = r.sources;
   } catch (err) {
     console.error(err);
+    await refundDailyQuota(admin, user.id, user.plan);
     return NextResponse.json(
       { error: "Yanıt üretilemedi, lütfen tekrar dene." },
       { status: 500 },
@@ -101,11 +106,10 @@ export async function POST(request: NextRequest) {
     sources,
   });
 
-  const after = await checkDailyLimit(admin, user.id, user.plan);
   return NextResponse.json({
     conversationId,
     answer,
     sources,
-    remaining: after.remaining === Infinity ? null : after.remaining,
+    remaining: quota.remaining === Infinity ? null : quota.remaining,
   });
 }
