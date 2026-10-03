@@ -19,30 +19,22 @@ export function DownloadButton({
 }) {
   const supabase = createClient();
   const [count, setCount] = useState(initialCount);
-  const [loading, setLoading] = useState(false);
   const [overlay, setOverlay] = useState(false);
   const [seconds, setSeconds] = useState(5);
   const started = useRef(false);
 
-  async function runDownload() {
-    setLoading(true);
-    try {
-      await supabase.rpc("increment_download", { note_id: noteId });
-      setCount((c) => c + 1);
-      const res = await fetch(fileUrl);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch {
-      window.open(fileUrl, "_blank", "noopener,noreferrer");
-    }
-    setLoading(false);
+  function runDownload() {
+    // Sayaç arka planda; indirme tarayıcının kendi indiricisiyle hemen başlar
+    // (büyük dosyayı önce belleğe çekmez). Supabase ?download= ekini zorlar.
+    void supabase.rpc("increment_download", { note_id: noteId });
+    setCount((c) => c + 1);
+    const sep = fileUrl.includes("?") ? "&" : "?";
+    const a = document.createElement("a");
+    a.href = `${fileUrl}${sep}download=${encodeURIComponent(fileName)}`;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
   function onClick() {
@@ -51,7 +43,7 @@ export function DownloadButton({
       setSeconds(5);
       setOverlay(true);
     } else {
-      void runDownload();
+      runDownload();
     }
   }
 
@@ -61,7 +53,7 @@ export function DownloadButton({
     if (seconds <= 0) {
       if (!started.current) {
         started.current = true;
-        void runDownload();
+        runDownload();
         setOverlay(false);
       }
       return;
@@ -75,7 +67,7 @@ export function DownloadButton({
     <>
       <button
         onClick={onClick}
-        disabled={loading}
+        title="İndir"
         className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm text-muted hover:text-primary disabled:opacity-50"
       >
         <span>⬇</span>
