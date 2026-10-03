@@ -27,10 +27,14 @@ export async function answerQuestion(
     .join("\n\n---\n\n");
 
   const prompt =
-    `Sen Notvia'nın yardımsever bir çalışma arkadaşısın. Aşağıdaki ders notu ` +
-    `parçalarına dayanarak öğrencinin sorusunu Türkçe, sade ve öğretici biçimde ` +
-    `yanıtla. Yalnızca verilen kaynaklardaki bilgilere dayan; kaynaklarda yoksa ` +
-    `bunu açıkça söyle ve uydurma.\n\n` +
+    `Notvia adlı not paylaşım platformunun çalışma asistanısın. Görevin, ` +
+    `aşağıdaki ders notu parçalarına dayanarak öğrencinin sorusunu yanıtlamak.\n` +
+    `Kurallar:\n` +
+    `- Türkçe, sade ve öğretici yaz; doğrudan cevaba geç, kendine hitap etme ` +
+    `("Sen Notvia" gibi ifadeler kullanma).\n` +
+    `- Yalnızca verilen kaynaklardaki bilgilere dayan. Kaynaklarda yoksa ` +
+    `"Notlarda bu bilgi yok" de ve kesinlikle uydurma.\n` +
+    `- Mümkünse ilgili kaynak numarasına atıf yap.\n\n` +
     `=== KAYNAKLAR ===\n${contextText}\n\n=== SORU ===\n${question}`;
 
   const genAI = new GoogleGenerativeAI(apiKey);

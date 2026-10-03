@@ -36,21 +36,35 @@ export async function indexNote(
     return { indexed: false, chunks: 0 };
   }
 
+  // Metadata chunk'ı: ders/hoca gibi sorulara (ör. "öğretim üyesi kim")
+  // içerik metninde geçmese de cevap verebilmek için başa eklenir.
+  const meta: string[] = [`Not başlığı: ${note.title}.`];
+  if (note.course_id) {
+    const { data: course } = await admin
+      .from("courses")
+      .select("name,instructor")
+      .eq("id", note.course_id)
+      .maybeSingle();
+    if (course?.name) meta.push(`Ders: ${course.name}.`);
+    if (course?.instructor) meta.push(`Öğretim üyesi: ${course.instructor}.`);
+  }
+  const allChunks = [meta.join(" "), ...chunks];
+
   // Önce embedding: başarısız olursa mevcut indeks bozulmaz
-  const vectors = await embedTexts(chunks);
+  const vectors = await embedTexts(allChunks);
 
   // Yeniden indeksleme için eski parçaları temizle (idempotent)
   await admin.from("note_chunks").delete().eq("note_id", note.id);
 
-  const rows = chunks.map((content, i) => ({
+  const rows = allChunks.map((content, i) => ({
     note_id: note.id,
     course_id: note.course_id,
-    content: `${note.title}\n\n${content}`,
+    content: i === 0 ? content : `${note.title}\n\n${content}`,
     embedding: JSON.stringify(vectors[i]),
   }));
   const { error } = await admin.from("note_chunks").insert(rows);
   if (error) throw new Error("Chunk yazılamadı: " + error.message);
 
   await admin.from("notes").update({ ai_indexed: true }).eq("id", note.id);
-  return { indexed: true, chunks: chunks.length };
+  return { indexed: true, chunks: allChunks.length };
 }

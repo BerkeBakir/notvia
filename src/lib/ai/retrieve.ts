@@ -6,7 +6,7 @@ export async function retrieveContext(
   admin: SupabaseClient,
   query: string,
   scope: { type: "all" | "course"; courseId?: string | null },
-  k = 8,
+  k = 12,
 ): Promise<{ content: string; noteId: string }[]> {
   const vector = await embedText(query);
   const { data, error } = await admin.rpc("match_note_chunks", {
