@@ -39,6 +39,12 @@ export async function Header() {
             Keşfet
           </Link>
           <Link
+            href="/asistan"
+            className="hidden px-2 text-muted hover:text-foreground sm:block"
+          >
+            Asistan
+          </Link>
+          <Link
             href="/search"
             className="hidden px-2 text-muted hover:text-foreground sm:block"
           >

@@ -1,0 +1,43 @@
+// src/lib/ai/chat.ts
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { retrieveContext } from "./retrieve";
+
+const CHAT_MODEL = "gemini-2.5-flash";
+
+export async function answerQuestion(
+  admin: SupabaseClient,
+  question: string,
+  scope: { type: "all" | "course"; courseId?: string | null },
+): Promise<{ answer: string; sources: { noteId: string }[] }> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY eksik");
+
+  const context = await retrieveContext(admin, question, scope);
+  if (context.length === 0) {
+    return {
+      answer:
+        "Bu konuda indekslenmiş not bulamadım. İlgili dersten metin içeren bir PDF not yüklenmişse tekrar dene.",
+      sources: [],
+    };
+  }
+
+  const contextText = context
+    .map((c, i) => `[Kaynak ${i + 1}]\n${c.content}`)
+    .join("\n\n---\n\n");
+
+  const prompt =
+    `Sen Notvia'nın yardımsever bir çalışma arkadaşısın. Aşağıdaki ders notu ` +
+    `parçalarına dayanarak öğrencinin sorusunu Türkçe, sade ve öğretici biçimde ` +
+    `yanıtla. Yalnızca verilen kaynaklardaki bilgilere dayan; kaynaklarda yoksa ` +
+    `bunu açıkça söyle ve uydurma.\n\n` +
+    `=== KAYNAKLAR ===\n${contextText}\n\n=== SORU ===\n${question}`;
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: CHAT_MODEL });
+  const result = await model.generateContent(prompt);
+  const answer = result.response.text() || "Yanıt üretilemedi.";
+
+  const sources = [...new Set(context.map((c) => c.noteId))].map((noteId) => ({ noteId }));
+  return { answer, sources };
+}
