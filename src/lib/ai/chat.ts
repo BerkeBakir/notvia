@@ -1,6 +1,6 @@
 // src/lib/ai/chat.ts
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { retrieveContext } from "./retrieve";
+import { retrieveContext, type AiScope } from "./retrieve";
 import { generateChat } from "./providers";
 
 const EMPTY_ANSWER =
@@ -14,10 +14,10 @@ const EMPTY_ANSWER =
 export async function prepareAnswer(
   admin: SupabaseClient,
   question: string,
-  scope: { type: "all" | "course"; courseId?: string | null },
+  scope: AiScope,
 ): Promise<
   | { empty: true; answer: string; sources: [] }
-  | { empty: false; prompt: string; sources: { noteId: string }[] }
+  | { empty: false; prompt: string; sources: { noteId: string; snippet: string }[] }
 > {
   const context = await retrieveContext(admin, question, scope);
   if (context.length === 0) {
@@ -36,12 +36,17 @@ export async function prepareAnswer(
     `("Sen Notvia" gibi ifadeler kullanma).\n` +
     `- Yalnızca verilen kaynaklardaki bilgilere dayan. Kaynaklarda yoksa ` +
     `"Notlarda bu bilgi yok" de ve kesinlikle uydurma.\n` +
-    `- Mümkünse ilgili kaynak numarasına atıf yap.\n` +
+    `- Bilgiyi aldığın kaynağı cümle sonunda köşeli parantezle göster: [1] veya [2, 5]. ` +
+    `"Kaynak 3" gibi yazma, yalnızca [3] biçimini kullan.\n` +
     `- Biçim: Markdown kullan; kısa başlıklar (##), madde listeleri (-) ve önemli ` +
     `terimler için **kalın** yaz. Tablo ve HTML kullanma, paragrafları kısa tut.\n\n` +
     `=== KAYNAKLAR ===\n${contextText}\n\n=== SORU ===\n${question}`;
 
-  const sources = [...new Set(context.map((c) => c.noteId))].map((noteId) => ({ noteId }));
+  // Kaynak numarası = parça sırası (1'den başlar); istemci [n] atıflarını buna eşler
+  const sources = context.map((c) => ({
+    noteId: c.noteId,
+    snippet: c.content.replace(/\s+/g, " ").slice(0, 280),
+  }));
   return { empty: false, prompt, sources };
 }
 
@@ -49,8 +54,8 @@ export async function prepareAnswer(
 export async function answerQuestion(
   admin: SupabaseClient,
   question: string,
-  scope: { type: "all" | "course"; courseId?: string | null },
-): Promise<{ answer: string; sources: { noteId: string }[] }> {
+  scope: AiScope,
+): Promise<{ answer: string; sources: { noteId: string; snippet: string }[] }> {
   const prep = await prepareAnswer(admin, question, scope);
   if (prep.empty) return { answer: prep.answer, sources: prep.sources };
   const { text } = await generateChat(prep.prompt);

@@ -33,9 +33,18 @@ export async function POST(request: NextRequest) {
   if (scopeType === "course" && !isUuid(scopeCourseId)) {
     return NextResponse.json({ error: "Geçerli bir ders seç." }, { status: 400 });
   }
+  // Çalışma alanı: seçili kaynak notlar (opsiyonel)
+  let noteIds: string[] | null = null;
+  if (Array.isArray(body.noteIds)) {
+    const ids: string[] = body.noteIds.filter(isUuid).slice(0, 100);
+    noteIds = ids;
+    if (ids.length === 0) {
+      return NextResponse.json({ error: "En az bir kaynak seç." }, { status: 400 });
+    }
+  }
 
   // RAG bağlamı + prompt (gömme + benzerlik). Bağlam yoksa model çağrılmaz.
-  const prep = await prepareAnswer(admin, message, { type: scopeType, courseId: scopeCourseId });
+  const prep = await prepareAnswer(admin, message, { type: scopeType, courseId: scopeCourseId, noteIds });
 
   // Kota yalnızca model çağrılacaksa (bağlam varsa) tüketilir
   let remaining: number | null = null;

@@ -5,7 +5,8 @@ import { useState } from "react";
 export interface ChatMsg {
   role: "user" | "assistant";
   content: string;
-  sources?: { noteId: string }[];
+  /** Sıra = atıf numarası ([1] → sources[0]); eski kayıtlarda snippet yok. */
+  sources?: { noteId: string; snippet?: string }[];
   /** Yanıtı üreten sağlayıcı/model (yalnızca canlı akışta bilinir). */
   provider?: { provider: string; model: string };
 }
@@ -13,6 +14,8 @@ export interface ChatMsg {
 export interface ChatScope {
   type: "all" | "course";
   courseId?: string | null;
+  /** Çalışma alanında seçili kaynak notlar. */
+  noteIds?: string[];
 }
 
 /**
@@ -47,6 +50,7 @@ export function useChatStream() {
           scopeType: scope.type,
           scopeCourseId: scope.type === "course" ? scope.courseId : null,
           message: text,
+          noteIds: scope.noteIds,
         }),
       });
 
@@ -71,7 +75,7 @@ export function useChatStream() {
             setConversationId(evt.conversationId);
             if (isNew) onNewConversation?.(evt.conversationId, text.slice(0, 60));
           }
-          const srcs = evt.sources as { noteId: string }[] | undefined;
+          const srcs = evt.sources as ChatMsg["sources"];
           setMessages((m) => {
             const copy = [...m];
             copy[copy.length - 1] = { ...copy[copy.length - 1], sources: srcs };

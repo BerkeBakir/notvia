@@ -25,12 +25,15 @@ export function ChatMessages({
   className,
   bubbleClassName = "bg-card",
   empty,
+  noteTitles,
 }: {
   messages: ChatMsg[];
   loading: boolean;
   className: string;
   bubbleClassName?: string;
   empty?: React.ReactNode;
+  /** noteId → başlık; atıf önizlemesinde gösterilir. */
+  noteTitles?: Record<string, string>;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
@@ -68,16 +71,22 @@ export function ChatMessages({
             <div
               className={`max-w-[92%] rounded-2xl rounded-tl-sm border border-border px-4 py-3 text-sm text-foreground ${bubbleClassName}`}
             >
-              <Markdown text={m.content} />
+              <Markdown
+                text={m.content}
+                cite={(nums, key) => (
+                  <Citations key={key} nums={nums} sources={m.sources} noteTitles={noteTitles} />
+                )}
+              />
               {((m.sources && m.sources.length > 0) || m.provider) && (
                 <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border pt-2">
-                  {m.sources?.map((s, j) => (
+                  {uniqueNotes(m.sources).map((noteId, j) => (
                     <Link
-                      key={s.noteId}
-                      href={`/notes/${s.noteId}`}
-                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                      key={noteId}
+                      href={`/notes/${noteId}`}
+                      className="inline-flex max-w-[220px] items-center gap-1 truncate text-xs text-primary hover:underline"
                     >
-                      <LinkSimple size={12} /> Kaynak {j + 1}
+                      <LinkSimple size={12} className="shrink-0" />
+                      <span className="truncate">{noteTitles?.[noteId] ?? `Kaynak ${j + 1}`}</span>
                     </Link>
                   ))}
                   {m.provider && (
@@ -93,5 +102,46 @@ export function ChatMessages({
       ))}
       {waiting && <p className="animate-pulse text-sm text-muted">Düşünüyor...</p>}
     </div>
+  );
+}
+
+function uniqueNotes(sources: ChatMsg["sources"]): string[] {
+  return [...new Set((sources ?? []).map((s) => s.noteId))];
+}
+
+/** [1, 3] atfı: küçük numara rozetleri; üzerine gelince/odaklanınca pasaj önizlemesi. */
+function Citations({
+  nums,
+  sources,
+  noteTitles,
+}: {
+  nums: number[];
+  sources: ChatMsg["sources"];
+  noteTitles?: Record<string, string>;
+}) {
+  return (
+    <span className="whitespace-nowrap">
+      {nums.map((n) => {
+        const src = sources?.[n - 1];
+        if (!src) return <sup key={n} className="text-[10px] text-muted">[{n}]</sup>;
+        const title = noteTitles?.[src.noteId];
+        return (
+          <span key={n} className="group relative mx-0.5 inline-block align-super">
+            <Link
+              href={`/notes/${src.noteId}`}
+              className="grid h-4 min-w-4 place-items-center rounded-full bg-primary/15 px-1 text-[10px] font-semibold leading-none text-primary hover:bg-primary hover:text-primary-foreground"
+            >
+              {n}
+            </Link>
+            {(src.snippet || title) && (
+              <span className="pointer-events-none invisible absolute bottom-full left-1/2 z-20 mb-1 w-64 -translate-x-1/2 whitespace-normal rounded-lg border border-border bg-card p-2.5 text-left text-xs font-normal leading-snug text-foreground opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+                {title && <span className="mb-1 block font-semibold text-primary">{title}</span>}
+                {src.snippet && <span className="line-clamp-5 text-muted">{src.snippet}…</span>}
+              </span>
+            )}
+          </span>
+        );
+      })}
+    </span>
   );
 }

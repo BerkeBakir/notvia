@@ -2,21 +2,26 @@
 // AI yanıtları için hafif, güvenli markdown görüntüleyici (HTML enjekte etmez).
 // Desteklenen: başlıklar, kalın/italik, satır içi kod, kod bloğu, madde/numaralı liste,
 // alıntı, yatay çizgi. Akış sırasında yarım kalan işaretler düz metin olarak görünür.
+// cite verilirse [1] / [2, 5] biçimindeki kaynak atıfları o fonksiyonla çizilir.
 import { Fragment, type ReactNode } from "react";
 
-function inline(text: string, keyBase: string): ReactNode[] {
+type Cite = (nums: number[], key: string) => ReactNode;
+
+function inline(text: string, keyBase: string, cite?: Cite): ReactNode[] {
   const out: ReactNode[] = [];
-  // **kalın**, __kalın__, *italik*, _italik_, `kod`
-  const re = /(\*\*([^*]+)\*\*|__([^_]+)__|`([^`]+)`|\*([^*\s][^*]*)\*|(?<![\p{L}\d])_([^_\s][^_]*)_(?![\p{L}\d]))/gu;
+  // **kalın**, __kalın__, *italik*, _italik_, `kod`, [1, 2] atıf
+  const re = /(\*\*([^*]+)\*\*|__([^_]+)__|`([^`]+)`|\*([^*\s][^*]*)\*|(?<![\p{L}\d])_([^_\s][^_]*)_(?![\p{L}\d])|\[(\d{1,2}(?:\s*,\s*\d{1,2})*)\])/gu;
   let last = 0;
   let m: RegExpExecArray | null;
   let i = 0;
   while ((m = re.exec(text))) {
     if (m.index > last) out.push(text.slice(last, m.index));
     const k = `${keyBase}-${i++}`;
-    if (m[2] ?? m[3]) out.push(<strong key={k} className="font-semibold">{inline(m[2] ?? m[3], k)}</strong>);
+    if (m[7]) {
+      out.push(cite ? cite(m[7].split(",").map((x) => Number(x.trim())), k) : m[0]);
+    } else if (m[2] ?? m[3]) out.push(<strong key={k} className="font-semibold">{inline(m[2] ?? m[3], k, cite)}</strong>);
     else if (m[4]) out.push(<code key={k} className="rounded bg-foreground/10 px-1 py-0.5 font-mono text-[0.85em]">{m[4]}</code>);
-    else out.push(<em key={k}>{inline(m[5] ?? m[6], k)}</em>);
+    else out.push(<em key={k}>{inline(m[5] ?? m[6], k, cite)}</em>);
     last = m.index + m[0].length;
   }
   if (last < text.length) out.push(text.slice(last));
@@ -103,10 +108,10 @@ function parse(src: string): Block[] {
   return blocks;
 }
 
-function withBreaks(text: string, key: string): ReactNode[] {
+function withBreaks(text: string, key: string, cite?: Cite): ReactNode[] {
   return text.split("\n").map((l, j, arr) => (
     <Fragment key={`${key}-l${j}`}>
-      {inline(l, `${key}-l${j}`)}
+      {inline(l, `${key}-l${j}`, cite)}
       {j < arr.length - 1 && <br />}
     </Fragment>
   ));
@@ -114,7 +119,7 @@ function withBreaks(text: string, key: string): ReactNode[] {
 
 const H_CLASS = ["", "text-lg", "text-base", "text-[0.95rem]", "text-sm", "text-sm", "text-sm"];
 
-export function Markdown({ text }: { text: string }) {
+export function Markdown({ text, cite }: { text: string; cite?: Cite }) {
   const blocks = parse(text);
   return (
     <div className="space-y-2.5 leading-relaxed break-words">
@@ -124,7 +129,7 @@ export function Markdown({ text }: { text: string }) {
           case "h":
             return (
               <p key={k} className={`${H_CLASS[b.level]} mt-3 font-heading font-bold first:mt-0`}>
-                {inline(b.text, k)}
+                {inline(b.text, k, cite)}
               </p>
             );
           case "hr":
@@ -138,7 +143,7 @@ export function Markdown({ text }: { text: string }) {
           case "quote":
             return (
               <blockquote key={k} className="border-l-2 border-primary/50 pl-3 text-muted">
-                {withBreaks(b.text, k)}
+                {withBreaks(b.text, k, cite)}
               </blockquote>
             );
           case "ul":
@@ -150,13 +155,13 @@ export function Markdown({ text }: { text: string }) {
                     <span className="shrink-0 select-none text-primary">
                       {it.n ?? (it.depth === 0 ? "•" : "◦")}
                     </span>
-                    <span className="min-w-0">{inline(it.text, `${k}-${j}`)}</span>
+                    <span className="min-w-0">{inline(it.text, `${k}-${j}`, cite)}</span>
                   </div>
                 ))}
               </div>
             );
           default:
-            return <p key={k}>{withBreaks(b.text, k)}</p>;
+            return <p key={k}>{withBreaks(b.text, k, cite)}</p>;
         }
       })}
     </div>

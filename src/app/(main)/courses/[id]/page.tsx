@@ -7,7 +7,7 @@ import { NoteCard } from "@/components/notes/NoteCard";
 import { NotificationToggle } from "@/components/notes/NotificationToggle";
 import { VerifyButton } from "@/components/notes/VerifyButton";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { CourseAssistant } from "@/components/ai/CourseAssistant";
+import { CourseStudy, type StudySource } from "@/components/study/CourseStudy";
 
 export async function generateMetadata({
   params,
@@ -81,6 +81,13 @@ export default async function CoursePage({
     .eq("course_id", id)
     .order("created_at", { ascending: false });
 
+  const studySources: StudySource[] = (noteRows ?? []).map((r) => ({
+    id: r.id,
+    title: r.title,
+    type: r.type,
+    aiIndexed: r.ai_indexed ?? null,
+  }));
+
   const notes = (noteRows ?? [])
     .map(mapNoteRow)
     .sort((a, b) => b.likes - a.likes);
@@ -149,7 +156,12 @@ export default async function CoursePage({
         />
       </div>
 
-      <CourseAssistant courseId={course.id} loggedIn={!!user} />
+      <CourseStudy
+        courseId={course.id}
+        courseName={course.name}
+        sources={studySources}
+        loggedIn={!!user}
+      />
 
       {notes.length === 0 ? (
         <EmptyState
