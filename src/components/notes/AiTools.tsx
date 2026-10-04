@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Sparkle, Exam, Cards } from "@phosphor-icons/react";
 
 interface Flashcard {
   soru: string;
@@ -25,8 +26,8 @@ export function AiTools({
   if (!isPro) {
     return (
       <div className="rounded-2xl border border-accent/30 bg-accent/5 p-5">
-        <h3 className="font-heading text-lg text-foreground">
-          🚀 AI Çalışma Araçları
+        <h3 className="flex items-center gap-1.5 font-heading text-lg text-foreground">
+          <Sparkle size={18} weight="duotone" className="text-primary" /> AI Çalışma Araçları
         </h3>
         <p className="mt-1 text-sm text-muted">
           Soru üretici, flashcard ve &quot;nota soru sor&quot; Pro üyelere
@@ -67,8 +68,8 @@ export function AiTools({
 
   return (
     <div className="space-y-4 rounded-2xl border border-border bg-card p-5">
-      <h3 className="font-heading text-lg text-card-foreground">
-        🚀 AI Çalışma Araçları
+      <h3 className="flex items-center gap-1.5 font-heading text-lg text-card-foreground">
+        <Sparkle size={18} weight="duotone" className="text-primary" /> AI Çalışma Araçları
       </h3>
 
       <div className="flex flex-wrap gap-2">
@@ -77,9 +78,9 @@ export function AiTools({
             call("questions", { noteId }, (d) => setQuestions(d.text as string), "q")
           }
           disabled={!!loading}
-          className="rounded-lg border border-accent/40 px-3 py-1.5 text-sm font-medium text-accent hover:bg-accent hover:text-primary-foreground disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-accent/40 px-3 py-1.5 text-sm font-medium text-accent hover:bg-accent hover:text-primary-foreground disabled:opacity-50"
         >
-          {loading === "q" ? "Üretiliyor..." : "📝 Soru Üret"}
+          {loading === "q" ? "Üretiliyor..." : (<><Exam size={14} /> Soru Üret</>)}
         </button>
         <button
           onClick={() =>
@@ -91,9 +92,9 @@ export function AiTools({
             )
           }
           disabled={!!loading}
-          className="rounded-lg border border-accent/40 px-3 py-1.5 text-sm font-medium text-accent hover:bg-accent hover:text-primary-foreground disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-accent/40 px-3 py-1.5 text-sm font-medium text-accent hover:bg-accent hover:text-primary-foreground disabled:opacity-50"
         >
-          {loading === "f" ? "Üretiliyor..." : "🃏 Flashcard"}
+          {loading === "f" ? "Üretiliyor..." : (<><Cards size={14} /> Flashcard</>)}
         </button>
       </div>
 

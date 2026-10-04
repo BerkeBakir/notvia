@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Copy } from "@phosphor-icons/react";
+import { Check, Copy, Sparkle } from "@phosphor-icons/react";
 import { AiPanel } from "@/components/ai/AiPanel";
 import { Markdown } from "@/components/ai/Markdown";
 
@@ -27,7 +27,7 @@ export function AiSummary({
         href="/premium"
         className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-accent/40 px-3 py-1.5 text-sm font-medium text-accent hover:bg-accent hover:text-primary-foreground"
       >
-        ✨ AI Özet — Pro&apos;ya yükselt
+        <Sparkle size={15} weight="duotone" /> AI Özet — Pro&apos;ya yükselt
       </Link>
     );
   }
@@ -73,7 +73,7 @@ export function AiSummary({
         onClick={openPanel}
         className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-lg border border-accent/40 px-3 py-1.5 text-sm font-medium text-accent hover:bg-accent hover:text-primary-foreground"
       >
-        ✨ AI Özet
+        <Sparkle size={15} weight="duotone" /> AI Özet
       </button>
 
       {open && (

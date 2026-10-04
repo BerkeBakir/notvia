@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { BellSimple } from "@phosphor-icons/react";
 import { createClient } from "@/lib/supabase/client";
 
 export function NotificationToggle({
@@ -23,9 +24,9 @@ export function NotificationToggle({
     return (
       <button
         onClick={() => router.push("/login")}
-        className="rounded-full border border-border px-4 py-2 text-sm text-foreground hover:border-primary hover:text-primary"
+        className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm text-foreground hover:border-primary hover:text-primary"
       >
-        🔔 Bildirim için giriş yap
+        <BellSimple size={15} /> Bildirim için giriş yap
       </button>
     );
   }
@@ -58,11 +59,12 @@ export function NotificationToggle({
         disabled={loading}
         className={
           subscribed
-            ? "rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
-            : "rounded-full border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
+            ? "inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            : "inline-flex items-center gap-1.5 rounded-full border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
         }
       >
-        {subscribed ? "🔔 Bildirimler açık" : "🔔 Bu ders için bildirim aç"}
+        <BellSimple size={15} weight={subscribed ? "fill" : "regular"} />
+        {subscribed ? "Bildirimler açık" : "Bu ders için bildirim aç"}
       </button>
       {error && <span className="text-xs text-red-400">{error}</span>}
     </div>
