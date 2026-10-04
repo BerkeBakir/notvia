@@ -8,7 +8,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const OCR_MODEL = "gemini-2.5-flash";
 const MAX_BATCH_BYTES = 8 * 1024 * 1024; // her parça ~8MB (base64 şişmesine pay)
-const MAX_OCR_PAGES = 120; // maliyet sınırı: en fazla bu kadar sayfa OCR'lanır
+const MAX_OCR_PAGES = 250; // maliyet/süre sınırı: en fazla bu kadar sayfa OCR'lanır
 
 /** PDF'i her biri ~MAX_BATCH_BYTES altında kalan sayfa gruplarına böler. */
 export async function splitPdfIntoBatches(buffer: Buffer): Promise<Uint8Array[]> {

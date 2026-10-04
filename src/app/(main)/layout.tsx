@@ -2,6 +2,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ReferralCapture } from "@/components/referral/ReferralCapture";
 import { FloatingAssistant } from "@/components/ai/FloatingAssistant";
+import { StreakPing } from "@/components/StreakPing";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
 export default async function MainLayout({
@@ -19,6 +20,7 @@ export default async function MainLayout({
       </main>
       <Footer />
       <FloatingAssistant loggedIn={!!user} />
+      {user && <StreakPing />}
     </div>
   );
 }

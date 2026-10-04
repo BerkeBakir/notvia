@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Flame } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser, isProfileComplete } from "@/lib/supabase/auth";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -82,6 +83,13 @@ export default async function ProfilePage() {
       : Promise.resolve({ data: null }),
   ]);
 
+  const { data: streakRow } = await supabase
+    .from("users")
+    .select("streak_count")
+    .eq("id", user.id)
+    .maybeSingle();
+  const streak = streakRow?.streak_count ?? 0;
+
   return (
     <div className="space-y-8">
       {!isProfileComplete(user) && (
@@ -118,6 +126,11 @@ export default async function ProfilePage() {
               {points}
             </div>
             <div className="text-sm text-muted">puan · {level}</div>
+            {streak > 0 && (
+              <div className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-accent">
+                <Flame size={15} weight="fill" /> {streak} günlük seri
+              </div>
+            )}
             <Link
               href="/profile/edit"
               className="mt-3 inline-block rounded-full border border-border px-4 py-1.5 text-sm text-foreground hover:border-primary hover:text-primary"
