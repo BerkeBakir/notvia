@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Flame } from "@phosphor-icons/react/dist/ssr";
+import { Flame, Gift } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/server";
+import { checkReferralReward } from "@/lib/actions/referral";
 import { getCurrentUser, isProfileComplete } from "@/lib/supabase/auth";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
@@ -89,6 +90,7 @@ export default async function ProfilePage() {
     .eq("id", user.id)
     .maybeSingle();
   const streak = streakRow?.streak_count ?? 0;
+  const reward = await checkReferralReward();
 
   return (
     <div className="space-y-8">
@@ -175,13 +177,38 @@ export default async function ProfilePage() {
 
       {/* Davet et */}
       <div className="rounded-2xl border border-border bg-card p-6">
-        <h2 className="font-heading text-lg text-card-foreground">
-          🤝 Arkadaşını Davet Et
+        <h2 className="flex items-center gap-1.5 font-heading text-lg text-card-foreground">
+          <Gift size={20} weight="duotone" className="text-primary" /> Arkadaşını Davet Et
         </h2>
         <p className="mt-1 text-sm text-muted">
           Davet linkinle gelen her arkadaş için <b>15 puan</b> kazan. Şu ana
           kadar <b>{stats.referralsMade}</b> kişi davet ettin.
         </p>
+
+        {/* Ödül: 5 davet → 1 ay Premium */}
+        <div className="mt-4 rounded-xl border border-accent/30 bg-accent/5 p-4">
+          {reward.granted ? (
+            <p className="flex items-center gap-1.5 text-sm font-medium text-accent">
+              <Gift size={16} weight="fill" /> {reward.required} davet ödülünü kazandın — 1 ay Premium aktif!
+            </p>
+          ) : (
+            <>
+              <p className="text-sm text-foreground">
+                <b>{reward.required} arkadaş</b> davet et, <b>1 ay Premium</b> kazan.
+              </p>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-border">
+                <div
+                  className="h-full rounded-full bg-primary transition-all"
+                  style={{ width: `${Math.min(100, (reward.count / reward.required) * 100)}%` }}
+                />
+              </div>
+              <p className="mt-1 text-xs text-muted">
+                {Math.min(reward.count, reward.required)}/{reward.required} davet
+              </p>
+            </>
+          )}
+        </div>
+
         <div className="mt-4">
           <InviteLink userId={user.id} />
         </div>

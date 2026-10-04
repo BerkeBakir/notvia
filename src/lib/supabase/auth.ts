@@ -42,9 +42,15 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("plan, role, name, university_id, department_id, class_year")
+    .select("plan, role, name, university_id, department_id, class_year, premium_until")
     .eq("id", user.id)
     .maybeSingle();
+
+  // Süreli (ödülle verilen) planın süresi dolduysa ücretsize düş
+  let plan = (profile?.plan as Plan) ?? "free";
+  if (plan !== "free" && profile?.premium_until && new Date(profile.premium_until) < new Date()) {
+    plan = "free";
+  }
 
   const meta = user.user_metadata ?? {};
   return {
@@ -57,7 +63,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       user.email?.split("@")[0] ??
       "Kullanıcı",
     avatarUrl: (meta.avatar_url as string) ?? undefined,
-    plan: (profile?.plan as Plan) ?? "free",
+    plan,
     role: (profile?.role as Role) ?? "member",
     universityId: profile?.university_id ?? null,
     departmentId: profile?.department_id ?? null,
