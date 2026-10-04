@@ -8,6 +8,7 @@ import {
   Cards,
   ChatsCircle,
   CheckSquare,
+  CircleNotch,
   Exam,
   FileText,
   Lightning,
@@ -53,9 +54,10 @@ interface Output {
   id: string;
   label: string;
   sourceCount: number;
-  result: StudioResult;
+  result?: StudioResult;
   provider?: string;
   createdAt: string;
+  loading?: boolean;
 }
 
 /** DB satırından (server'dan gelen) Output'a dönüştürür. */
@@ -156,6 +158,13 @@ export function CourseStudy({
     }
     setBusyKind(kind);
     setStudioError("");
+    // Paneli HEMEN yükleniyor durumuyla aç (kullanıcı boş beklemesin)
+    const tempId = crypto.randomUUID();
+    setOutputs((o) => [
+      { id: tempId, label, sourceCount: noteIds.length, createdAt: new Date().toISOString(), loading: true },
+      ...o,
+    ]);
+    setOpenId(tempId);
     try {
       const res = await fetch("/api/ai/studio", {
         method: "POST",
@@ -164,21 +173,31 @@ export function CourseStudy({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        setOutputs((o) => o.filter((x) => x.id !== tempId)); // placeholder'ı kaldır
+        setOpenId(null);
         if (res.status === 429 || data.limitReached) setShowUpsell(true);
         else setStudioError(data.error ?? "Üretilemedi.");
       } else {
-        const out: Output = {
-          id: data.id ?? crypto.randomUUID(),
-          label,
-          sourceCount: noteIds.length,
-          result: data.result,
-          provider: data.provider,
-          createdAt: data.createdAt ?? new Date().toISOString(),
-        };
-        setOutputs((o) => [out, ...o]);
-        setOpenId(out.id);
+        const realId = data.id ?? tempId;
+        setOutputs((o) =>
+          o.map((x) =>
+            x.id === tempId
+              ? {
+                  ...x,
+                  id: realId,
+                  result: data.result,
+                  provider: data.provider,
+                  createdAt: data.createdAt ?? x.createdAt,
+                  loading: false,
+                }
+              : x,
+          ),
+        );
+        setOpenId(realId);
       }
     } catch {
+      setOutputs((o) => o.filter((x) => x.id !== tempId));
+      setOpenId(null);
       setStudioError("Bağlantı hatası.");
     }
     setBusyKind(null);
@@ -344,9 +363,13 @@ export function CourseStudy({
                   className="flex w-full items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 text-left text-xs hover:border-primary"
                 >
                   <span className="font-medium text-foreground">{o.label}</span>
-                  <span className="text-muted">
-                    {new Date(o.createdAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
-                  </span>
+                  {o.loading ? (
+                    <CircleNotch size={14} className="animate-spin text-primary" />
+                  ) : (
+                    <span className="text-muted">
+                      {new Date(o.createdAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -399,7 +422,20 @@ export function CourseStudy({
           onClose={() => setOpenId(null)}
           footer={<p className="text-[11px] text-muted">AI hata yapabilir; önemli bilgileri notlardan doğrula.</p>}
         >
-          {opened.result.kind === "quiz" ? (
+          {opened.loading || !opened.result ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+              <CircleNotch size={34} className="animate-spin text-primary" />
+              <p className="font-heading font-bold text-foreground">{opened.label} hazırlanıyor</p>
+              <p className="max-w-xs text-xs text-muted">
+                Seçili notlar okunuyor ve AI içeriği üretiyor. 10-40 saniye sürebilir.
+              </p>
+              <div className="mt-2 w-full max-w-sm space-y-2">
+                <div className="h-3 animate-pulse rounded bg-foreground/10" />
+                <div className="h-3 w-5/6 animate-pulse rounded bg-foreground/10" />
+                <div className="h-3 w-4/6 animate-pulse rounded bg-foreground/10" />
+              </div>
+            </div>
+          ) : opened.result.kind === "quiz" ? (
             <QuizView key={opened.id} questions={opened.result.questions} />
           ) : opened.result.kind === "flashcards" ? (
             <FlashcardView key={opened.id} cards={opened.result.cards} />
