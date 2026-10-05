@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { LinkSimple } from "@phosphor-icons/react";
 import { Markdown } from "@/components/ai/Markdown";
+import { SaveAnswerButton } from "@/components/ai/SaveAnswerButton";
 import type { ChatMsg } from "@/components/ai/useChatStream";
 
 const PROVIDER_LABEL: Record<string, string> = {
@@ -77,7 +78,7 @@ export function ChatMessages({
                   <Citations key={key} nums={nums} sources={m.sources} noteTitles={noteTitles} />
                 )}
               />
-              {((m.sources && m.sources.length > 0) || m.provider) && (
+              {m.content.trim() && (
                 <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border pt-2">
                   {uniqueNotes(m.sources).map((noteId, j) => (
                     <Link
@@ -89,6 +90,7 @@ export function ChatMessages({
                       <span className="truncate">{noteTitles?.[noteId] ?? `Kaynak ${j + 1}`}</span>
                     </Link>
                   ))}
+                  <SaveAnswerButton content={m.content} sources={m.sources} />
                   {m.provider && (
                     <span className="ml-auto text-[11px] text-muted" title={m.provider.model}>
                       {PROVIDER_LABEL[m.provider.provider] ?? m.provider.provider} · {m.provider.model}

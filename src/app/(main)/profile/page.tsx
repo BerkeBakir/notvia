@@ -133,12 +133,20 @@ export default async function ProfilePage() {
                 <Flame size={15} weight="fill" /> {streak} günlük seri
               </div>
             )}
-            <Link
-              href="/profile/edit"
-              className="mt-3 inline-block rounded-full border border-border px-4 py-1.5 text-sm text-foreground hover:border-primary hover:text-primary"
-            >
-              Profili Düzenle
-            </Link>
+            <div className="mt-3 flex flex-wrap justify-end gap-2">
+              <Link
+                href="/kaydedilenler"
+                className="inline-block rounded-full border border-border px-4 py-1.5 text-sm text-foreground hover:border-primary hover:text-primary"
+              >
+                Kaydedilenler
+              </Link>
+              <Link
+                href="/profile/edit"
+                className="inline-block rounded-full border border-border px-4 py-1.5 text-sm text-foreground hover:border-primary hover:text-primary"
+              >
+                Profili Düzenle
+              </Link>
+            </div>
           </div>
         </div>
 
