@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/supabase/auth";
 import { mapNoteRow } from "@/lib/supabase/mappers";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { SearchFilters } from "@/components/notes/SearchFilters";
+import { TopicSearch } from "@/components/notes/TopicSearch";
 
 export default async function SearchPage({
   searchParams,
@@ -78,6 +79,8 @@ export default async function SearchPage({
           Not başlığında ara, üniversite ve bölüme göre filtrele.
         </p>
       </div>
+
+      {user && <TopicSearch />}
 
       <SearchFilters
         universities={universitiesRes.data ?? []}
