@@ -45,51 +45,71 @@ export default async function NoteDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const user = await getCurrentUser();
 
-  const { data: note } = await supabase
-    .from("notes")
-    .select(
-      "id,title,description,type,file_url,downloads,likes,dislikes,course_id,user_id",
-    )
-    .eq("id", id)
-    .single();
+  // Dalga 1: not + kullanıcı (bağımsız) paralel
+  const [{ data: note }, user] = await Promise.all([
+    supabase
+      .from("notes")
+      .select(
+        "id,title,description,type,file_url,downloads,likes,dislikes,course_id,user_id",
+      )
+      .eq("id", id)
+      .single(),
+    getCurrentUser(),
+  ]);
   if (!note) notFound();
 
-  const { data: course } = note.course_id
-    ? await supabase
-        .from("courses")
-        .select("id,name")
-        .eq("id", note.course_id)
-        .single()
-    : { data: null };
+  // Dalga 2: nota bağlı tüm sorgular paralel (Tokyo'ya tek gidiş-geliş)
+  const noResult = { data: null };
+  const [
+    { data: course },
+    { data: uploader },
+    { data: ntRows },
+    { data: commentRows },
+    { data: relatedRows },
+    votes,
+  ] = await Promise.all([
+    note.course_id
+      ? supabase.from("courses").select("id,name").eq("id", note.course_id).single()
+      : Promise.resolve(noResult),
+    note.user_id
+      ? supabase.from("users").select("id,name").eq("id", note.user_id).maybeSingle()
+      : Promise.resolve(noResult),
+    supabase.from("note_tags").select("tag_id").eq("note_id", id),
+    supabase
+      .from("comments")
+      .select("id,content,created_at,user_id")
+      .eq("note_id", id)
+      .order("created_at", { ascending: false }),
+    note.course_id
+      ? supabase
+          .from("notes")
+          .select("*")
+          .eq("course_id", note.course_id)
+          .neq("id", note.id)
+          .order("likes", { ascending: false })
+          .limit(3)
+      : Promise.resolve({ data: [] }),
+    user
+      ? Promise.all([
+          supabase.from("likes").select("id").eq("user_id", user.id).eq("note_id", id).maybeSingle(),
+          supabase.from("dislikes").select("id").eq("user_id", user.id).eq("note_id", id).maybeSingle(),
+          supabase.from("saves").select("id").eq("user_id", user.id).eq("note_id", id).maybeSingle(),
+        ])
+      : Promise.resolve(null),
+  ]);
 
-  // Paylaşan kullanıcı
-  const { data: uploader } = note.user_id
-    ? await supabase.from("users").select("id,name").eq("id", note.user_id).maybeSingle()
-    : { data: null };
-
-  // Etiketler
-  const { data: ntRows } = await supabase
-    .from("note_tags")
-    .select("tag_id")
-    .eq("note_id", id);
+  // Dalga 3: etiketler + yorum yazarları (önceki sonuçlara bağlı) paralel
   const tagIds = (ntRows ?? []).map((r) => r.tag_id);
-  const { data: tags } = tagIds.length
-    ? await supabase.from("tags").select("id,name").in("id", tagIds)
-    : { data: [] };
-
-  // Yorumlar + yazar adları
-  const { data: commentRows } = await supabase
-    .from("comments")
-    .select("id,content,created_at,user_id")
-    .eq("note_id", id)
-    .order("created_at", { ascending: false });
-
   const authorIds = [...new Set((commentRows ?? []).map((c) => c.user_id))];
-  const { data: authors } = authorIds.length
-    ? await supabase.from("users").select("id,name").in("id", authorIds)
-    : { data: [] };
+  const [{ data: tags }, { data: authors }] = await Promise.all([
+    tagIds.length
+      ? supabase.from("tags").select("id,name").in("id", tagIds)
+      : Promise.resolve({ data: [] }),
+    authorIds.length
+      ? supabase.from("users").select("id,name").in("id", authorIds)
+      : Promise.resolve({ data: [] }),
+  ]);
   const nameById = new Map((authors ?? []).map((a) => [a.id, a.name]));
 
   const comments: CommentItem[] = (commentRows ?? []).map((c) => ({
@@ -100,46 +120,10 @@ export default async function NoteDetailPage({
     authorName: nameById.get(c.user_id) ?? "Kullanıcı",
   }));
 
-  // Beğeni / beğenmeme / kaydetme durumu
-  let liked = false;
-  let disliked = false;
-  let saved = false;
-  if (user) {
-    const [likeRes, dislikeRes, saveRes] = await Promise.all([
-      supabase
-        .from("likes")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("note_id", id)
-        .maybeSingle(),
-      supabase
-        .from("dislikes")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("note_id", id)
-        .maybeSingle(),
-      supabase
-        .from("saves")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("note_id", id)
-        .maybeSingle(),
-    ]);
-    liked = !!likeRes.data;
-    disliked = !!dislikeRes.data;
-    saved = !!saveRes.data;
-  }
+  const liked = !!votes?.[0]?.data;
+  const disliked = !!votes?.[1]?.data;
+  const saved = !!votes?.[2]?.data;
 
-  // İlgili notlar (aynı dersten, bu not hariç)
-  const { data: relatedRows } = note.course_id
-    ? await supabase
-        .from("notes")
-        .select("*")
-        .eq("course_id", note.course_id)
-        .neq("id", note.id)
-        .order("likes", { ascending: false })
-        .limit(3)
-    : { data: [] };
   const relatedNotes = (relatedRows ?? []).map(mapNoteRow);
 
   return (
