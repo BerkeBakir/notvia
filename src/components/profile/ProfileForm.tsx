@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { CATALOG_PREFIX, departmentOptions } from "@/lib/departmentCatalog";
 
 const NEW = "__new__";
 const CLASS_OPTIONS = [
@@ -65,10 +66,13 @@ export function ProfileForm({
     () =>
       isNewUni
         ? []
-        : departments.filter((d) => d.university_id === universityId),
+        : departmentOptions(
+            departments.filter((d) => d.university_id === universityId),
+          ),
     [departments, universityId, isNewUni],
   );
   const isNewDept = isNewUni || departmentId === NEW;
+  const isCatalogDept = departmentId.startsWith(CATALOG_PREFIX);
 
   async function resolveUniversity(): Promise<string> {
     if (!isNewUni) return universityId;
@@ -91,8 +95,10 @@ export function ProfileForm({
   }
 
   async function resolveDepartment(uniId: string): Promise<string> {
-    if (!isNewDept) return departmentId;
-    const nm = newDeptName.trim();
+    if (!isNewDept && !isCatalogDept) return departmentId;
+    const nm = isCatalogDept
+      ? departmentId.slice(CATALOG_PREFIX.length)
+      : newDeptName.trim();
     const ins = await supabase
       .from("departments")
       .insert({ university_id: uniId, name: nm, created_by: userId })
@@ -219,8 +225,8 @@ export function ProfileForm({
           <option value="">Bölüm seç</option>
           <option value={NEW}>+ Yeni bölüm ekle</option>
           {availableDepartments.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name}
+            <option key={d.value} value={d.value}>
+              {d.label}
             </option>
           ))}
         </select>
