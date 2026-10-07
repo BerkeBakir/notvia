@@ -80,7 +80,7 @@ async function main() {
   }
 
   const { data: recipients } = await admin.from("users").select("email,name").in("id", userIds);
-  const courseUrl = `${env.NEXT_PUBLIC_SITE_URL ?? "https://notvia.vercel.app"}/courses/${course.id}`;
+  const courseUrl = `${env.NEXT_PUBLIC_SITE_URL ?? "https://notvia.app"}/courses/${course.id}`;
 
   let sent = 0;
   for (const r of recipients ?? []) {

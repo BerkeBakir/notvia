@@ -82,7 +82,7 @@ export default async function Image({
         </div>
 
         <span style={{ color: "#71717a", fontSize: "26px" }}>
-          notvia.vercel.app · topluluk katkılı not paylaşımı
+          notvia.app · topluluk katkılı not paylaşımı
         </span>
       </div>
     ),
