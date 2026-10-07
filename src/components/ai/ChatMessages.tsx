@@ -9,6 +9,7 @@ import { SaveAnswerButton } from "@/components/ai/SaveAnswerButton";
 import type { ChatMsg } from "@/components/ai/useChatStream";
 
 const PROVIDER_LABEL: Record<string, string> = {
+  claude: "Claude",
   gemini: "Gemini",
   groq: "Groq",
   cerebras: "Cerebras",

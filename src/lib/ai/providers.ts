@@ -2,6 +2,7 @@
 // Sohbet (metin üretimi) için çoklu-sağlayıcı fallback zinciri.
 // Biri kota/hata verince sıradaki ücretsiz sağlayıcıya düşer.
 // NOT: Yalnızca sohbet için. Embedding tek modelde kalır (vektör uyumu).
+import Anthropic from "@anthropic-ai/sdk";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 interface Provider {
@@ -105,10 +106,47 @@ function geminiProvider(apiKey: string, model: string): Provider {
   };
 }
 
+function claudeProvider(apiKey: string, model: string): Provider {
+  const client = new Anthropic({ apiKey, maxRetries: 1 });
+  // Sohbet/RAG cevabı: düşük effort yeterli ve ucuz. Opus 5.5'te thinking kapatılamaz, effort ile yönetilir.
+  const params = (prompt: string) => ({
+    model,
+    max_tokens: 8000,
+    output_config: { effort: "low" as const },
+    messages: [{ role: "user" as const, content: prompt }],
+  });
+  return {
+    name: "claude",
+    model,
+    async generate(prompt: string) {
+      const msg = await client.messages.create(params(prompt));
+      if (msg.stop_reason === "refusal") throw new Error("claude: refusal");
+      const text = msg.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("");
+      if (!text) throw new Error("claude: boş yanıt");
+      return text;
+    },
+    async *stream(prompt: string) {
+      const stream = client.messages.stream(params(prompt));
+      for await (const event of stream) {
+        if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+          yield event.delta.text;
+        }
+      }
+      const final = await stream.finalMessage();
+      // Hiç metin gelmeden reddedilirse zincir sıradaki sağlayıcıya düşer.
+      if (final.stop_reason === "refusal") throw new Error("claude: refusal");
+    },
+  };
+}
+
 /** env'de anahtarı olan sağlayıcıları sırayla döndürür (öncelik sırası). */
 function buildChain(): Provider[] {
   const chain: Provider[] = [];
   const e = process.env;
+
+  if (e.ANTHROPIC_API_KEY) {
+    chain.push(claudeProvider(e.ANTHROPIC_API_KEY, e.ANTHROPIC_MODEL || "claude-opus-5-5"));
+  }
 
   if (e.GEMINI_API_KEY) {
     chain.push(geminiProvider(e.GEMINI_API_KEY, e.GEMINI_CHAT_MODEL || "gemini-2.5-flash"));
