@@ -20,6 +20,7 @@ import {
   Trophy,
   User,
   Bell,
+  CalendarCheck,
   HandWaving,
   UsersThree,
   X,
@@ -37,6 +38,12 @@ const GROUPS: { title: string; items: Item[]; auth?: boolean }[] = [
       { href: "/notes/upload", label: "Not Yükle", icon: FileArrowUp },
       { href: "/courses/new", label: "Ders Ekle", icon: PlusCircle },
       { href: "/istekler", label: "Not istekleri", icon: HandWaving, desc: "Aranan notlar — sende varsa yükle" },
+    ],
+  },
+  {
+    title: "Sınav",
+    items: [
+      { href: "/takvim", label: "Sınav takvimi", icon: CalendarCheck, desc: "Geri sayım + e-posta hatırlatma" },
     ],
   },
   {

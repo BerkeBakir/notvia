@@ -46,7 +46,7 @@ drop policy if exists nrv_delete_own on public.note_request_votes;
 create policy nrv_delete_own on public.note_request_votes for delete to authenticated
   using ((select auth.uid()) = user_id);
 
-revoke all on public.note_requests, public.note_request_votes from anon;
+revoke all on public.note_requests, public.note_request_votes from anon, authenticated;
 grant select on public.note_requests, public.note_request_votes to anon;
 grant select, insert, delete on public.note_request_votes to authenticated;
 grant select, insert, delete on public.note_requests to authenticated;
