@@ -141,6 +141,19 @@ body::before {
   animation: notvia-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Site menüsü çekmecesi: sağdan kayar */
+@keyframes notvia-drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.drawer-in {
+  animation: notvia-drawer-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* AI paneli: masaüstünde sağdan, mobilde alttan kayar */
 @keyframes notvia-panel-in {
   from {
@@ -169,7 +182,8 @@ body::before {
 
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-up,
-  .animate-panel-in {
+  .animate-panel-in,
+  .drawer-in {
     animation: none;
   }
 }

@@ -52,12 +52,6 @@ export async function Header() {
             Ara
           </Link>
           <Link
-            href="/courses/new"
-            className="hidden px-2 text-muted hover:text-foreground sm:block"
-          >
-            Ders Ekle
-          </Link>
-          <Link
             href="/notes/upload"
             className="hidden px-2 text-muted hover:text-foreground sm:block"
           >
