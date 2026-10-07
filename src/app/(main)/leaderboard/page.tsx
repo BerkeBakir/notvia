@@ -2,9 +2,21 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { computeLevel, computePoints } from "@/lib/contribution";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { getCurrentUser } from "@/lib/supabase/auth";
 
-export default async function LeaderboardPage() {
+export default async function LeaderboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   const supabase = await createClient();
+  const viewer = await getCurrentUser();
+  const friendsTab = (await searchParams).tab === "arkadaslar";
+  let circle: Set<string> | null = null;
+  if (friendsTab && viewer) {
+    const { data: fr } = await supabase.from("follows").select("following_id").eq("follower_id", viewer.id);
+    circle = new Set([viewer.id, ...(fr ?? []).map((r) => r.following_id)]);
+  }
 
   const [usersRes, notesRes, coursesRes] = await Promise.all([
     supabase.from("users").select("id,name"),
@@ -51,7 +63,7 @@ export default async function LeaderboardPage() {
       };
       return { id: u.id, name: u.name, points: computePoints(s), stats: s };
     })
-    .filter((r) => r.points > 0)
+    .filter((r) => (circle ? circle.has(r.id) : r.points > 0))
     .sort((a, b) => b.points - a.points)
     .slice(0, 20);
 
@@ -68,7 +80,36 @@ export default async function LeaderboardPage() {
         </p>
       </div>
 
-      {ranked.length === 0 ? (
+      <div className="flex gap-1 rounded-2xl border border-border bg-card p-1">
+        {[
+          ["", "Genel"],
+          ["arkadaslar", "Arkadaşlar"],
+        ].map(([k, l]) => (
+          <Link
+            key={k}
+            href={k ? `/leaderboard?tab=${k}` : "/leaderboard"}
+            className={`flex-1 rounded-xl px-4 py-2 text-center text-sm transition ${
+              (k === "arkadaslar") === friendsTab ? "bg-primary text-primary-foreground" : "text-muted hover:text-foreground"
+            }`}
+          >
+            {l}
+          </Link>
+        ))}
+      </div>
+
+      {friendsTab && !viewer && (
+        <EmptyState icon="🔒" title="Giriş yap" description="Arkadaşlarınla yarışmak için giriş yap." action={{ href: "/login", label: "Giriş Yap" }} />
+      )}
+      {friendsTab && viewer && circle && circle.size === 1 && (
+        <EmptyState
+          icon="👋"
+          title="Henüz arkadaşın yok"
+          description="Arkadaş ekle, aranızda kim daha çok katkı yapıyor gör."
+          action={{ href: "/arkadaslar?tab=bul", label: "Arkadaş bul" }}
+        />
+      )}
+
+      {friendsTab && (!viewer || (circle && circle.size === 1)) ? null : ranked.length === 0 ? (
         <EmptyState
           icon="🏆"
           title="Henüz katkı yapan kimse yok"
@@ -80,7 +121,9 @@ export default async function LeaderboardPage() {
           {ranked.map((r, i) => (
             <li
               key={r.name + i}
-              className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3"
+              className={`flex items-center justify-between rounded-xl border bg-card px-4 py-3 ${
+                r.id === viewer?.id ? "border-primary/50 ring-2 ring-primary/10" : "border-border"
+              }`}
             >
               <div className="flex items-center gap-3">
                 <span className="w-8 text-center text-lg font-bold text-muted">

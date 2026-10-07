@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { getCurrentUser } from "@/lib/supabase/auth";
+import { FollowButton } from "@/components/friends/FollowButton";
 import {
   computeBadges,
   computeLevel,
@@ -48,6 +50,19 @@ export default async function PublicProfilePage({
         : Promise.resolve({ data: null }),
     ]);
 
+  const viewer = await getCurrentUser();
+  const [{ count: friendCount }, rel] = await Promise.all([
+    supabase.from("follows").select("follower_id", { count: "exact", head: true }).eq("follower_id", id),
+    viewer && viewer.id !== id
+      ? Promise.all([
+          supabase.from("follows").select("follower_id").eq("follower_id", viewer.id).eq("following_id", id).maybeSingle(),
+          supabase.from("follows").select("follower_id").eq("follower_id", id).eq("following_id", viewer.id).maybeSingle(),
+        ])
+      : Promise.resolve(null),
+  ]);
+  const iFollow = !!rel?.[0]?.data;
+  const followsMe = !!rel?.[1]?.data;
+
   const stats = {
     notesCount: notes.length,
     likesReceived: notes.reduce((s, n) => s + (n.likes ?? 0), 0),
@@ -77,11 +92,15 @@ export default async function PublicProfilePage({
               </span>
             )}
           </div>
-          <div className="text-right">
+          <div className="flex flex-col items-end gap-2 text-right">
             <div className="font-heading text-3xl font-bold text-foreground">
               {points}
             </div>
-            <div className="text-sm text-muted">puan · {computeLevel(points)}</div>
+            <div className="text-sm text-muted">
+              puan · {computeLevel(points)} · {friendCount ?? 0} arkadaş
+            </div>
+            <FollowButton targetId={id} viewerId={viewer?.id ?? null} initialFollowing={iFollow} followsYou={followsMe} />
+            {followsMe && !iFollow && <span className="text-xs text-muted">Seni arkadaş olarak ekledi</span>}
           </div>
         </div>
         <div className="mt-5 flex flex-wrap gap-2">

@@ -13,8 +13,11 @@ export interface NotificationItem {
 
 export const NOTIFICATION_ICONS: Record<string, string> = {
   comment: "💬",
-  like: "♥",
+  like: "👍",
   note: "📄",
+  follow: "🤝",
+  friend_note: "👥",
+  share: "📨",
 };
 
 export async function markRead(id: string) {

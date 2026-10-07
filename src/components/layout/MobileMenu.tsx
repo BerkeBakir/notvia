@@ -20,6 +20,7 @@ import {
   Trophy,
   User,
   Bell,
+  UsersThree,
   X,
   type Icon,
 } from "@phosphor-icons/react";
@@ -46,6 +47,7 @@ const GROUPS: { title: string; items: Item[]; auth?: boolean }[] = [
   {
     title: "Topluluk",
     items: [
+      { href: "/arkadaslar", label: "Arkadaşlar", icon: UsersThree, desc: "Akış, liste, arkadaş bul" },
       { href: "/leaderboard", label: "Liderlik", icon: Trophy },
       { href: "/premium", label: "Premium", icon: Crown },
     ],

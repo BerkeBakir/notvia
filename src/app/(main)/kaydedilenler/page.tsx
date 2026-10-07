@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Markdown } from "@/components/ai/Markdown";
 import { deleteSavedAnswer } from "@/lib/actions/savedAnswers";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ShareToFriend } from "@/components/friends/ShareToFriend";
 
 export const metadata = {
   title: "Kaydedilenler",
@@ -17,6 +18,7 @@ type Saved = {
   content: string;
   sources: { noteId: string }[] | null;
   created_at: string;
+  shared_by: string | null;
 };
 
 export default async function SavedPage() {
@@ -26,10 +28,15 @@ export default async function SavedPage() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("ai_saved_answers")
-    .select("id,content,sources,created_at")
+    .select("id,content,sources,created_at,shared_by")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
   const items = (data ?? []) as Saved[];
+  const senderIds = [...new Set(items.map((i) => i.shared_by).filter(Boolean))] as string[];
+  const { data: senders } = senderIds.length
+    ? await supabase.from("users").select("id,name").in("id", senderIds)
+    : { data: [] as { id: string; name: string }[] };
+  const senderName = new Map((senders ?? []).map((u) => [u.id, u.name]));
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
@@ -50,13 +57,23 @@ export default async function SavedPage() {
           {items.map((it) => (
             <div key={it.id} className="rounded-2xl border border-border bg-card p-5">
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs text-muted">
+                <span className="flex flex-wrap items-center gap-2 text-xs text-muted">
                   {new Date(it.created_at).toLocaleDateString("tr-TR", {
                     day: "2-digit",
                     month: "long",
                     year: "numeric",
                   })}
+                  {it.shared_by && (
+                    <Link
+                      href={`/users/${it.shared_by}`}
+                      className="rounded-full bg-primary/15 px-2 py-0.5 font-medium text-primary hover:underline"
+                    >
+                      📨 {senderName.get(it.shared_by) ?? "Arkadaşın"} gönderdi
+                    </Link>
+                  )}
                 </span>
+                <span className="flex items-center gap-3">
+                <ShareToFriend userId={user.id} answerId={it.id} compact />
                 <form action={deleteSavedAnswer.bind(null, it.id)}>
                   <button
                     type="submit"
@@ -66,6 +83,7 @@ export default async function SavedPage() {
                     <Trash size={14} /> Sil
                   </button>
                 </form>
+                </span>
               </div>
               <Markdown text={it.content} />
               {it.sources && it.sources.length > 0 && (

@@ -7,6 +7,7 @@ import { AdSlot } from "@/components/ads/AdSlot";
 import { VoteButtons } from "@/components/notes/VoteButtons";
 import { DownloadButton } from "@/components/notes/DownloadButton";
 import { FavoriteButton } from "@/components/notes/FavoriteButton";
+import { ShareToFriend } from "@/components/friends/ShareToFriend";
 import { ReportButton } from "@/components/notes/ReportButton";
 import { AiSummary } from "@/components/notes/AiSummary";
 import { AiTools } from "@/components/notes/AiTools";
@@ -207,6 +208,7 @@ export default async function NoteDetailPage({
             userId={user?.id ?? null}
             initialSaved={saved}
           />
+          <ShareToFriend userId={user?.id ?? null} noteId={note.id} />
         </div>
 
         <a

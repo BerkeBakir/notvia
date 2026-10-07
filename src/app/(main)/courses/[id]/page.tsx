@@ -128,6 +128,23 @@ export default async function CoursePage({
     }
   }
 
+  // Bu derste arkadaşların: aynı bölümde olanlar + bu derse not yükleyenler
+  let courseFriends: { id: string; name: string }[] = [];
+  if (user) {
+    const { data: fr } = await supabase.from("follows").select("following_id").eq("follower_id", user.id);
+    const friendIds = (fr ?? []).map((r) => r.following_id);
+    if (friendIds.length) {
+      const uploaderIds = new Set((noteRows ?? []).map((r) => r.user_id));
+      const { data: fu } = await supabase
+        .from("users")
+        .select("id,name,department_id")
+        .in("id", friendIds);
+      courseFriends = (fu ?? [])
+        .filter((u) => u.department_id === course.department_id || uploaderIds.has(u.id))
+        .map((u) => ({ id: u.id, name: u.name }));
+    }
+  }
+
   // Premium kilidi: 3'ten fazla not varsa, en çok beğenilen ilk 3 ücretsize kilitli
   const canSeeTop = !user ? false : isPaid(user.plan);
   const lockTopCount = notes.length > 3 && !canSeeTop ? 3 : 0;
@@ -152,6 +169,20 @@ export default async function CoursePage({
           )}
           <div className="mt-2 flex flex-wrap items-center gap-3">
             <span className="text-sm text-muted">{notes.length} içerik</span>
+            {courseFriends.length > 0 && (
+              <Link
+                href="/arkadaslar?tab=liste"
+                className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs text-primary hover:bg-primary/15"
+                title={courseFriends.map((f) => f.name).join(", ")}
+              >
+                👥 Bu derste {courseFriends.length} arkadaşın var:{" "}
+                {courseFriends
+                  .slice(0, 2)
+                  .map((f) => f.name.split(" ")[0])
+                  .join(", ")}
+                {courseFriends.length > 2 ? ` +${courseFriends.length - 2}` : ""}
+              </Link>
+            )}
             <VerifyButton
               courseId={course.id}
               userId={user?.id ?? null}
