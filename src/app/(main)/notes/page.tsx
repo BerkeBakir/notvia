@@ -48,6 +48,7 @@ export default async function BrowsePage() {
         departments={departmentsRes.data ?? []}
         courses={coursesRes.data ?? []}
         noteCounts={noteCounts}
+        myUniversityId={user?.universityId ?? null}
       />
     </div>
   );
