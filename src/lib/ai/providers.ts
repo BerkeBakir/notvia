@@ -145,7 +145,7 @@ function buildChain(): Provider[] {
   const e = process.env;
 
   if (e.ANTHROPIC_API_KEY) {
-    chain.push(claudeProvider(e.ANTHROPIC_API_KEY, e.ANTHROPIC_MODEL || "claude-opus-5-5"));
+    chain.push(claudeProvider(e.ANTHROPIC_API_KEY, e.ANTHROPIC_MODEL || "claude-sonnet-5-5"));
   }
 
   if (e.GEMINI_API_KEY) {
