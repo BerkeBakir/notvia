@@ -14,6 +14,7 @@ import { Footer } from "@/components/layout/Footer";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { mapNoteRow } from "@/lib/supabase/mappers";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/auth";
 
 const FEATURES = [
   {
@@ -62,7 +63,7 @@ const STEPS = [
 
 export default async function HomePage() {
   const supabase = await createClient();
-  const [uni, courses, notes, trendingRes] = await Promise.all([
+  const [uni, courses, notes, trendingRes, user] = await Promise.all([
     supabase.from("universities").select("id", { count: "exact", head: true }),
     supabase.from("courses").select("id", { count: "exact", head: true }),
     supabase.from("notes").select("id", { count: "exact", head: true }),
@@ -71,6 +72,7 @@ export default async function HomePage() {
       .select("*")
       .order("likes", { ascending: false })
       .limit(6),
+    getCurrentUser(),
   ]);
 
   const trending = (trendingRes.data ?? []).map(mapNoteRow);
@@ -128,10 +130,10 @@ export default async function HomePage() {
               Keşfetmeye Başla
             </Link>
             <Link
-              href="/login"
+              href={user ? "/notes/upload" : "/login"}
               className="rounded-full border border-border px-7 py-3 font-medium text-foreground hover:border-primary hover:text-primary"
             >
-              Ücretsiz Kaydol
+              {user ? "Not Yükle" : "Ücretsiz Kaydol"}
             </Link>
           </div>
 
@@ -217,16 +219,18 @@ export default async function HomePage() {
       <section className="mx-auto max-w-4xl px-4 py-16">
         <div className="relative overflow-hidden rounded-3xl border border-primary/25 bg-[radial-gradient(120%_120%_at_0%_0%,color-mix(in_oklab,var(--primary)_14%,transparent),transparent_55%)] bg-card p-10 text-center">
           <h2 className="font-heading text-3xl font-bold text-foreground">
-            Hazır mısın?
+            {user ? "Sınava mı çalışıyorsun?" : "Hazır mısın?"}
           </h2>
           <p className="mt-3 text-muted">
-            Birkaç dakikada profilini oluştur, ilk notunu paylaş.
+            {user
+              ? "Notlardan sorularını AI asistana sor, kaynaklı cevap al."
+              : "Birkaç dakikada profilini oluştur, ilk notunu paylaş."}
           </p>
           <Link
-            href="/login"
+            href={user ? "/asistan" : "/login"}
             className="mt-6 inline-block rounded-full bg-primary px-8 py-3 font-medium text-primary-foreground hover:opacity-90"
           >
-            Hemen Başla
+            {user ? "AI Asistanı Aç" : "Hemen Başla"}
           </Link>
         </div>
       </section>

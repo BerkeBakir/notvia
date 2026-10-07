@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { safeNext } from "@/lib/safeNext";
 import { createClient } from "@/lib/supabase/client";
 import { CATALOG_PREFIX, departmentOptions } from "@/lib/departmentCatalog";
 
@@ -43,6 +45,7 @@ export function ProfileForm({
     universityId: string | null;
     departmentId: string | null;
     classYear: string | null;
+    termsAccepted: boolean;
   };
   universities: University[];
   departments: Department[];
@@ -58,6 +61,8 @@ export function ProfileForm({
   const [departmentId, setDepartmentId] = useState(initial.departmentId ?? "");
   const [newDeptName, setNewDeptName] = useState("");
   const [classYear, setClassYear] = useState(initial.classYear ?? "");
+  const [acceptTerms, setAcceptTerms] = useState(initial.termsAccepted);
+  const [acceptAge, setAcceptAge] = useState(initial.termsAccepted);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -128,6 +133,8 @@ export function ProfileForm({
     if (isNewDept && !newDeptName.trim()) return setError("Bölüm adı gerekli.");
     if (!isNewDept && !departmentId) return setError("Bölüm seç.");
     if (!classYear) return setError("Sınıf seç.");
+    if (!acceptTerms || !acceptAge)
+      return setError("Devam etmek için iki onayı da işaretlemelisin.");
 
     setSaving(true);
     try {
@@ -141,11 +148,14 @@ export function ProfileForm({
           university_id: uniId,
           department_id: depId,
           class_year: classYear,
+          ...(initial.termsAccepted
+            ? {}
+            : { terms_accepted_at: new Date().toISOString() }),
         })
         .eq("id", userId);
       if (upErr) throw new Error(upErr.message);
 
-      router.push(next || "/notes");
+      router.push(safeNext(next));
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Bir hata oluştu.");
@@ -253,6 +263,38 @@ export function ProfileForm({
           </option>
         ))}
       </select>
+
+      {!initial.termsAccepted && (
+        <div className="space-y-3 rounded-lg border border-border bg-card p-4 text-sm text-foreground">
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={acceptTerms}
+              onChange={(e) => setAcceptTerms(e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-[var(--primary)]"
+            />
+            <span>
+              <Link href="/terms" target="_blank" className="text-primary hover:underline">
+                Kullanım Şartları
+              </Link>{" "}
+              ve{" "}
+              <Link href="/privacy" target="_blank" className="text-primary hover:underline">
+                Gizlilik Politikası
+              </Link>
+              &apos;nı okudum, kabul ediyorum.
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={acceptAge}
+              onChange={(e) => setAcceptAge(e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-[var(--primary)]"
+            />
+            <span>18 yaşından büyüğüm.</span>
+          </label>
+        </div>
+      )}
 
       <button
         type="submit"

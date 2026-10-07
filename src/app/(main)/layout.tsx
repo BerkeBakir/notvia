@@ -3,7 +3,12 @@ import { Footer } from "@/components/layout/Footer";
 import { ReferralCapture } from "@/components/referral/ReferralCapture";
 import { FloatingAssistant } from "@/components/ai/FloatingAssistant";
 import { StreakPing } from "@/components/StreakPing";
-import { getCurrentUser } from "@/lib/supabase/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { getCurrentUser, isProfileComplete } from "@/lib/supabase/auth";
+
+// Profil eksikken de açılabilen sayfalar
+const PROFILE_EXEMPT = ["/profile/edit", "/terms", "/privacy"];
 
 export default async function MainLayout({
   children,
@@ -11,6 +16,12 @@ export default async function MainLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
+  if (user && !isProfileComplete(user)) {
+    const path = (await headers()).get("x-pathname") ?? "";
+    if (!PROFILE_EXEMPT.some((p) => path.startsWith(p))) {
+      redirect(`/profile/edit?next=${encodeURIComponent(path || "/notes")}`);
+    }
+  }
   return (
     <div className="flex min-h-screen flex-col">
       <ReferralCapture />

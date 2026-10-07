@@ -11,6 +11,7 @@ export interface AuthUser {
   universityId: string | null;
   departmentId: string | null;
   classYear: string | null;
+  termsAcceptedAt: string | null;
 }
 
 export const PAID_PLANS: Plan[] = ["premium", "pro"];
@@ -28,7 +29,8 @@ export function isProfileComplete(user: AuthUser): boolean {
     !!user.name.trim() &&
     !!user.universityId &&
     !!user.departmentId &&
-    !!user.classYear
+    !!user.classYear &&
+    !!user.termsAcceptedAt
   );
 }
 
@@ -42,7 +44,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("plan, role, name, university_id, department_id, class_year, premium_until")
+    .select("plan, role, name, university_id, department_id, class_year, premium_until, terms_accepted_at")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -68,5 +70,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     universityId: profile?.university_id ?? null,
     departmentId: profile?.department_id ?? null,
     classYear: profile?.class_year ?? null,
+    termsAcceptedAt: profile?.terms_accepted_at ?? null,
   };
 }
+

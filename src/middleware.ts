@@ -4,14 +4,17 @@ import { NextResponse, type NextRequest } from "next/server";
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 export async function middleware(request: NextRequest) {
+  // Sunucu layout'u hangi sayfada olduğunu bilsin (profil tamamlama yönlendirmesi için)
+  const headers = new Headers(request.headers);
+  headers.set("x-pathname", request.nextUrl.pathname);
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    return NextResponse.next({ request });
+    return NextResponse.next({ request: { headers } });
   }
 
-  let supabaseResponse = NextResponse.next({ request });
+  let supabaseResponse = NextResponse.next({ request: { headers } });
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -22,7 +25,8 @@ export async function middleware(request: NextRequest) {
         cookiesToSet.forEach(({ name, value }) =>
           request.cookies.set(name, value),
         );
-        supabaseResponse = NextResponse.next({ request });
+        headers.set("cookie", request.headers.get("cookie") ?? "");
+        supabaseResponse = NextResponse.next({ request: { headers } });
         cookiesToSet.forEach(({ name, value, options }) =>
           supabaseResponse.cookies.set(name, value, options),
         );

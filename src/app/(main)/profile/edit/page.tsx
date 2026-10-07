@@ -26,6 +26,7 @@ export default async function ProfileEditPage({
         universityId: user.universityId,
         departmentId: user.departmentId,
         classYear: user.classYear,
+        termsAccepted: !!user.termsAcceptedAt,
       }}
       universities={universities.data ?? []}
       departments={departments.data ?? []}

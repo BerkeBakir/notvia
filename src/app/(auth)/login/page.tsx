@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { signInWithEmail, signUpWithEmail } from "@/lib/actions/auth";
 import { GoogleButton } from "@/components/auth/GoogleButton";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/supabase/auth";
 
 export default async function LoginPage({
   searchParams,
@@ -8,6 +10,8 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string; message?: string }>;
 }) {
   const sp = await searchParams;
+  // Zaten girişliyse giriş ekranı gösterme
+  if (await getCurrentUser()) redirect("/notes");
 
   const inputClass =
     "w-full rounded-lg border border-border bg-card px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted focus:border-primary";
@@ -94,6 +98,17 @@ export default async function LoginPage({
             placeholder="Şifre (en az 6 karakter)"
             className={inputClass}
           />
+          <label className="flex items-start gap-2 text-xs text-muted">
+            <input type="checkbox" required className="mt-0.5 accent-[var(--primary)]" />
+            <span>
+              <a href="/terms" target="_blank" className="underline hover:text-foreground">Kullanım Şartları</a> ve{" "}
+              <a href="/privacy" target="_blank" className="underline hover:text-foreground">Gizlilik Politikası</a>&apos;nı kabul ediyorum.
+            </span>
+          </label>
+          <label className="flex items-start gap-2 text-xs text-muted">
+            <input type="checkbox" required className="mt-0.5 accent-[var(--primary)]" />
+            <span>18 yaşından büyüğüm.</span>
+          </label>
           <button
             type="submit"
             className="w-full rounded-lg border border-primary px-4 py-3 font-medium text-primary hover:bg-primary hover:text-primary-foreground"
