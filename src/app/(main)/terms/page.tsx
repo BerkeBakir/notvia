@@ -35,6 +35,10 @@ export default function TermsPage() {
 
       <h2 className="font-heading text-lg text-foreground">4. Hesap</h2>
       <p>
+        Notvia&apos;yı kullanmak için 18 yaşını doldurmuş olman gerekir. Hesap
+        oluşturarak 18 yaşından büyük olduğunu beyan edersin.
+      </p>
+      <p>
         Kurallara aykırı davranan hesaplar askıya alınabilir veya silinebilir.
         Hesabını istediğin zaman kapatabilirsin.
       </p>

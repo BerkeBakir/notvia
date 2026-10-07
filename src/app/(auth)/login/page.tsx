@@ -109,6 +109,14 @@ export default async function LoginPage({
         </div>
 
         <GoogleButton />
+
+        <p className="mt-6 text-center text-xs text-muted">
+          Kaydolarak{" "}
+          <a href="/terms" className="underline hover:text-foreground">
+            Kullanım Şartları
+          </a>
+          &apos;nı kabul etmiş ve 18 yaşından büyük olduğunu beyan etmiş olursun.
+        </p>
       </div>
     </div>
   );
