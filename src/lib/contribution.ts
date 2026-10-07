@@ -5,6 +5,7 @@ export interface ContributionStats {
   coursesAdded: number;
   referralsMade?: number;
   requestsFulfilled?: number;
+  questPoints?: number;
 }
 
 export interface Badge {
@@ -19,7 +20,8 @@ export function computePoints(s: ContributionStats): number {
     s.coursesAdded * 5 +
     s.downloadsReceived +
     (s.referralsMade ?? 0) * 15 +
-    (s.requestsFulfilled ?? 0) * 20
+    (s.requestsFulfilled ?? 0) * 20 +
+    (s.questPoints ?? 0)
   );
 }
 

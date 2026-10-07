@@ -51,6 +51,7 @@ export default async function ProfilePage({
     { count: commentsCount },
     { count: savedAnswers },
     { count: requestsFulfilled },
+    { data: questRows },
     uniRes,
     depRes,
     reward,
@@ -67,6 +68,7 @@ export default async function ProfilePage({
     supabase.from("comments").select("id", { count: "exact", head: true }).eq("user_id", user.id),
     supabase.from("ai_saved_answers").select("id", { count: "exact", head: true }).eq("user_id", user.id),
     supabase.from("note_requests").select("id", { count: "exact", head: true }).eq("fulfilled_by", user.id),
+    supabase.from("weekly_quest_claims").select("points").eq("user_id", user.id),
     user.universityId
       ? supabase.from("universities").select("name").eq("id", user.universityId).single()
       : Promise.resolve({ data: null }),
@@ -84,6 +86,7 @@ export default async function ProfilePage({
     coursesAdded: coursesAdded ?? 0,
     referralsMade: referralsMade ?? 0,
     requestsFulfilled: requestsFulfilled ?? 0,
+    questPoints: (questRows ?? []).reduce((a, r) => a + (r.points ?? 0), 0),
   };
   const points = computePoints(stats);
   const lv = levelProgress(points);
@@ -198,7 +201,7 @@ export default async function ProfilePage({
             </div>
             <p className="mt-1.5 text-xs text-muted">
               {lv.next ? `${lv.next} seviyesine ${lv.toNext} puan kaldı` : "En yüksek seviyedesin 🎉"} · Not yükle +10,
-              beğeni +5, ders ekle +5, davet +15, istek karşıla +20
+              beğeni +5, ders ekle +5, davet +15, istek karşıla +20, haftalık görevler
             </p>
           </div>
         </div>

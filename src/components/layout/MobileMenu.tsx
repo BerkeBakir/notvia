@@ -20,6 +20,7 @@ import {
   Trophy,
   User,
   Bell,
+  Target,
   Calculator,
   CalendarCheck,
   HandWaving,
@@ -59,6 +60,7 @@ const GROUPS: { title: string; items: Item[]; auth?: boolean }[] = [
     title: "Topluluk",
     items: [
       { href: "/arkadaslar", label: "Arkadaşlar", icon: UsersThree, desc: "Akış, liste, arkadaş bul" },
+      { href: "/gorevler", label: "Haftalık görevler", icon: Target, desc: "Tamamla, puan kazan" },
       { href: "/leaderboard", label: "Liderlik", icon: Trophy },
       { href: "/premium", label: "Premium", icon: Crown },
     ],
