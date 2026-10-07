@@ -9,9 +9,10 @@ export default async function NewCoursePage() {
   if (!isProfileComplete(user)) redirect("/profile/edit?next=/courses/new");
 
   const supabase = await createClient();
-  const [universities, departments] = await Promise.all([
+  const [universities, departments, courses] = await Promise.all([
     supabase.from("universities").select("id,name,city").order("name"),
     supabase.from("departments").select("id,name,university_id").order("name"),
+    supabase.from("courses").select("id,name,department_id").order("name"),
   ]);
 
   return (
@@ -19,6 +20,9 @@ export default async function NewCoursePage() {
       userId={user.id}
       universities={universities.data ?? []}
       departments={departments.data ?? []}
+      courses={courses.data ?? []}
+      defaultUniversityId={user.universityId}
+      defaultDepartmentId={user.departmentId}
     />
   );
 }
