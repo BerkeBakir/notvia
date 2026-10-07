@@ -18,10 +18,11 @@ export default async function LeaderboardPage({
     circle = new Set([viewer.id, ...(fr ?? []).map((r) => r.following_id)]);
   }
 
-  const [usersRes, notesRes, coursesRes] = await Promise.all([
+  const [usersRes, notesRes, coursesRes, reqRes] = await Promise.all([
     supabase.from("users").select("id,name"),
     supabase.from("notes").select("user_id,likes,downloads"),
     supabase.from("courses").select("created_by"),
+    supabase.from("note_requests").select("fulfilled_by").eq("status", "fulfilled"),
   ]);
 
   const users = usersRes.data ?? [];
@@ -30,7 +31,7 @@ export default async function LeaderboardPage({
 
   const byUser = new Map<
     string,
-    { notesCount: number; likesReceived: number; downloadsReceived: number; coursesAdded: number }
+    { notesCount: number; likesReceived: number; downloadsReceived: number; coursesAdded: number; requestsFulfilled: number }
   >();
   const ensure = (id: string) => {
     if (!byUser.has(id))
@@ -39,6 +40,7 @@ export default async function LeaderboardPage({
         likesReceived: 0,
         downloadsReceived: 0,
         coursesAdded: 0,
+        requestsFulfilled: 0,
       });
     return byUser.get(id)!;
   };
@@ -52,6 +54,9 @@ export default async function LeaderboardPage({
   for (const c of courses) {
     if (c.created_by) ensure(c.created_by).coursesAdded += 1;
   }
+  for (const r of reqRes.data ?? []) {
+    if (r.fulfilled_by) ensure(r.fulfilled_by).requestsFulfilled += 1;
+  }
 
   const ranked = users
     .map((u) => {
@@ -60,6 +65,7 @@ export default async function LeaderboardPage({
         likesReceived: 0,
         downloadsReceived: 0,
         coursesAdded: 0,
+        requestsFulfilled: 0,
       };
       return { id: u.id, name: u.name, points: computePoints(s), stats: s };
     })

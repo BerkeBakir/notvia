@@ -20,6 +20,7 @@ import {
   Trophy,
   User,
   Bell,
+  HandWaving,
   UsersThree,
   X,
   type Icon,
@@ -35,6 +36,7 @@ const GROUPS: { title: string; items: Item[]; auth?: boolean }[] = [
       { href: "/search", label: "Ara", icon: MagnifyingGlass, desc: "Başlık ya da konuyla bul" },
       { href: "/notes/upload", label: "Not Yükle", icon: FileArrowUp },
       { href: "/courses/new", label: "Ders Ekle", icon: PlusCircle },
+      { href: "/istekler", label: "Not istekleri", icon: HandWaving, desc: "Aranan notlar — sende varsa yükle" },
     ],
   },
   {

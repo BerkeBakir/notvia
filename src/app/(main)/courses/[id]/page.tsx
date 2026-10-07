@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser, isPaid } from "@/lib/supabase/auth";
+import { loadRequests } from "@/lib/requests";
+import { RequestBoard } from "@/components/requests/RequestBoard";
 import { mapNoteRow } from "@/lib/supabase/mappers";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { NotificationToggle } from "@/components/notes/NotificationToggle";
@@ -145,6 +147,8 @@ export default async function CoursePage({
     }
   }
 
+  const requests = await loadRequests(supabase, { courseId: course.id, userId: user?.id ?? null });
+
   // Premium kilidi: 3'ten fazla not varsa, en çok beğenilen ilk 3 ücretsize kilitli
   const canSeeTop = !user ? false : isPaid(user.plan);
   const lockTopCount = notes.length > 3 && !canSeeTop ? 3 : 0;
@@ -198,6 +202,16 @@ export default async function CoursePage({
           initialSubscribed={subscribed}
         />
       </div>
+
+      <section className="rounded-2xl border border-border bg-card/50 p-5">
+        <h2 className="mb-3 font-heading text-lg font-semibold text-foreground">
+          🙋 Not istekleri{" "}
+          <span className="text-sm font-normal text-muted">
+            {requests.filter((r) => r.status === "open").length} açık
+          </span>
+        </h2>
+        <RequestBoard items={requests} userId={user?.id ?? null} courseId={course.id} />
+      </section>
 
       <CourseStudy
         courseId={course.id}

@@ -87,6 +87,8 @@ export function UploadForm({
   courses,
   defaultUniversityId = null,
   defaultDepartmentId = null,
+  defaultCourseId = null,
+  request = null,
 }: {
   userId: string;
   universities: Option[];
@@ -94,6 +96,9 @@ export function UploadForm({
   courses: Course[];
   defaultUniversityId?: string | null;
   defaultDepartmentId?: string | null;
+  defaultCourseId?: string | null;
+  /** Bir not isteğini karşılamak için gelindiyse */
+  request?: { id: string; title: string } | null;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -101,7 +106,7 @@ export function UploadForm({
 
   const [universityId, setUniversityId] = useState(defaultUniversityId ?? "");
   const [departmentId, setDepartmentId] = useState(defaultDepartmentId ?? "");
-  const [courseId, setCourseId] = useState("");
+  const [courseId, setCourseId] = useState(defaultCourseId ?? "");
   const [type, setType] = useState<"note" | "exam">("note");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -209,6 +214,11 @@ export function UploadForm({
         .single();
       if (insErr) throw new Error(insErr.message);
 
+      // İsteği karşıla (isteyenlere bildirim gider)
+      if (request) {
+        await supabase.rpc("fulfill_note_request", { p_request: request.id, p_note: inserted.id });
+      }
+
       // Etiket + abone bildirimi (best-effort, yüklemeyi bozmaz)
       await Promise.allSettled([
         linkTags(inserted.id),
@@ -256,6 +266,12 @@ export function UploadForm({
           Paylaştığın her not puan kazandırır ve AI asistanı da güçlendirir.
         </p>
       </div>
+
+      {request && (
+        <p className="rounded-xl border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-foreground">
+          🙋 Bir isteği karşılıyorsun: <b>{request.title}</b> — yükleyince isteyenlere haber gidecek.
+        </p>
+      )}
 
       {error && (
         <p className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-400">

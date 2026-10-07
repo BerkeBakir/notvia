@@ -50,6 +50,7 @@ export default async function ProfilePage({
     { data: me },
     { count: commentsCount },
     { count: savedAnswers },
+    { count: requestsFulfilled },
     uniRes,
     depRes,
     reward,
@@ -65,6 +66,7 @@ export default async function ProfilePage({
     supabase.from("users").select("streak_count,created_at").eq("id", user.id).maybeSingle(),
     supabase.from("comments").select("id", { count: "exact", head: true }).eq("user_id", user.id),
     supabase.from("ai_saved_answers").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+    supabase.from("note_requests").select("id", { count: "exact", head: true }).eq("fulfilled_by", user.id),
     user.universityId
       ? supabase.from("universities").select("name").eq("id", user.universityId).single()
       : Promise.resolve({ data: null }),
@@ -81,6 +83,7 @@ export default async function ProfilePage({
     downloadsReceived: notes.reduce((s, n) => s + (n.downloads ?? 0), 0),
     coursesAdded: coursesAdded ?? 0,
     referralsMade: referralsMade ?? 0,
+    requestsFulfilled: requestsFulfilled ?? 0,
   };
   const points = computePoints(stats);
   const lv = levelProgress(points);
@@ -195,7 +198,7 @@ export default async function ProfilePage({
             </div>
             <p className="mt-1.5 text-xs text-muted">
               {lv.next ? `${lv.next} seviyesine ${lv.toNext} puan kaldı` : "En yüksek seviyedesin 🎉"} · Not yükle +10,
-              beğeni +5, ders ekle +5, davet +15
+              beğeni +5, ders ekle +5, davet +15, istek karşıla +20
             </p>
           </div>
         </div>
@@ -227,7 +230,7 @@ export default async function ProfilePage({
             {earned}/{badges.length}
           </span>
         </h2>
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
           {badges.map((b) => (
             <div
               key={b.label}

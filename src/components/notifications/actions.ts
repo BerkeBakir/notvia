@@ -18,6 +18,7 @@ export const NOTIFICATION_ICONS: Record<string, string> = {
   follow: "🤝",
   friend_note: "👥",
   share: "📨",
+  request: "🙋",
 };
 
 export async function markRead(id: string) {

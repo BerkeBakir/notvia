@@ -4,6 +4,7 @@ export interface ContributionStats {
   downloadsReceived: number;
   coursesAdded: number;
   referralsMade?: number;
+  requestsFulfilled?: number;
 }
 
 export interface Badge {
@@ -17,7 +18,8 @@ export function computePoints(s: ContributionStats): number {
     s.likesReceived * 5 +
     s.coursesAdded * 5 +
     s.downloadsReceived +
-    (s.referralsMade ?? 0) * 15
+    (s.referralsMade ?? 0) * 15 +
+    (s.requestsFulfilled ?? 0) * 20
   );
 }
 
@@ -71,5 +73,6 @@ export function badgeCatalog(s: ContributionStats) {
     { icon: "🔥", label: "Popüler", hint: "Notların 50 beğeni alsın", earned: s.likesReceived >= 50, progress: [s.likesReceived, 50] },
     { icon: "🎓", label: "Ders Kurucusu", hint: "3 ders ekle", earned: s.coursesAdded >= 3, progress: [s.coursesAdded, 3] },
     { icon: "🤝", label: "Davetçi", hint: "1 arkadaşını davet et", earned: r >= 1, progress: [r, 1] },
+    { icon: "🙋", label: "Yardımsever", hint: "Bir not isteğini karşıla", earned: (s.requestsFulfilled ?? 0) >= 1, progress: [s.requestsFulfilled ?? 0, 1] },
   ].map((b) => ({ ...b, progress: [Math.min(b.progress[0], b.progress[1]), b.progress[1]] as [number, number] }));
 }
