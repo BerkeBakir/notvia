@@ -20,6 +20,7 @@ import {
   Trophy,
   User,
   Bell,
+  Calculator,
   CalendarCheck,
   HandWaving,
   UsersThree,
@@ -44,6 +45,7 @@ const GROUPS: { title: string; items: Item[]; auth?: boolean }[] = [
     title: "Sınav",
     items: [
       { href: "/takvim", label: "Sınav takvimi", icon: CalendarCheck, desc: "Geri sayım + e-posta hatırlatma" },
+      { href: "/hesaplayici", label: "Not hesaplayıcı", icon: Calculator, desc: "Finalden kaç lazım, bağıl, AGNO" },
     ],
   },
   {
