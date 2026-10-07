@@ -1,6 +1,7 @@
 // src/components/ai/AssistantChat.tsx
 "use client";
 
+import { Combobox } from "@/components/ui/Combobox";
 import { useState, useEffect } from "react";
 import { PaperPlaneRight, Sparkle, Plus, ChatsCircle, CheckSquare, Square, Buildings, CircleNotch } from "@phosphor-icons/react";
 import { createClient } from "@/lib/supabase/client";
@@ -213,18 +214,15 @@ export function AssistantChat({
               Belirli ders
             </button>
             {scopeType === "course" && (
-              <select
-                value={selectedName}
-                onChange={(e) => setSelectedName(e.target.value)}
-                className="rounded-full border border-border bg-background px-3 py-1.5 text-sm text-foreground"
-              >
-                <option value="">Ders seç...</option>
-                {courseGroups.map((g) => (
-                  <option key={g.name} value={g.name}>
-                    {g.name}
-                  </option>
-                ))}
-              </select>
+              <div className="w-full sm:w-72">
+                <Combobox
+                  placeholder="Ders seç..."
+                  searchPlaceholder="Ders ara..."
+                  options={courseGroups.map((g) => ({ value: g.name, label: g.name }))}
+                  value={selectedName}
+                  onChange={setSelectedName}
+                />
+              </div>
             )}
           </div>
 

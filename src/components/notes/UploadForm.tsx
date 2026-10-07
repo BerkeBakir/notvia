@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { Combobox } from "@/components/ui/Combobox";
+import { Books, Buildings, GraduationCap } from "@phosphor-icons/react";
 
 interface Option {
   id: string;
@@ -189,53 +191,41 @@ export function UploadForm({
         </p>
       )}
 
-      <select
+      <Combobox
+        icon={<Buildings size={18} weight="duotone" />}
+        placeholder="Üniversite seç"
+        searchPlaceholder="Üniversite ara..."
+        options={universities.map((u) => ({ value: u.id, label: u.name }))}
         value={universityId}
-        onChange={(e) => {
-          setUniversityId(e.target.value);
+        onChange={(v) => {
+          setUniversityId(v);
           setDepartmentId("");
           setCourseId("");
         }}
-        className={inputClass}
-      >
-        <option value="">Üniversite seç</option>
-        {universities.map((u) => (
-          <option key={u.id} value={u.id}>
-            {u.name}
-          </option>
-        ))}
-      </select>
-
-      <select
+      />
+      <Combobox
+        icon={<GraduationCap size={18} weight="duotone" />}
+        placeholder={universityId ? "Bölüm seç" : "Önce üniversite seç"}
+        searchPlaceholder="Bölüm ara..."
+        disabled={!universityId}
+        emptyText="Bu üniversitede henüz bölüm yok — Ders Ekle'den ekleyebilirsin"
+        options={filteredDepartments.map((d) => ({ value: d.id, label: d.name }))}
         value={departmentId}
-        onChange={(e) => {
-          setDepartmentId(e.target.value);
+        onChange={(v) => {
+          setDepartmentId(v);
           setCourseId("");
         }}
-        disabled={!universityId}
-        className={inputClass}
-      >
-        <option value="">Bölüm seç</option>
-        {filteredDepartments.map((d) => (
-          <option key={d.id} value={d.id}>
-            {d.name}
-          </option>
-        ))}
-      </select>
-
-      <select
-        value={courseId}
-        onChange={(e) => setCourseId(e.target.value)}
+      />
+      <Combobox
+        icon={<Books size={18} weight="duotone" />}
+        placeholder={departmentId ? "Ders seç" : "Önce bölüm seç"}
+        searchPlaceholder="Ders ara..."
         disabled={!departmentId}
-        className={inputClass}
-      >
-        <option value="">Ders seç</option>
-        {filteredCourses.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </select>
+        emptyText="Bu bölümde henüz ders yok — Ders Ekle'den ekleyebilirsin"
+        options={filteredCourses.map((c) => ({ value: c.id, label: c.name }))}
+        value={courseId}
+        onChange={setCourseId}
+      />
 
       <div className="flex gap-3">
         <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 text-sm text-muted has-[:checked]:border-primary has-[:checked]:text-primary">

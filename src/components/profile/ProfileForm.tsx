@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { safeNext } from "@/lib/safeNext";
+import { Combobox } from "@/components/ui/Combobox";
+import { Buildings, GraduationCap } from "@phosphor-icons/react";
 import { createClient } from "@/lib/supabase/client";
 import { CATALOG_PREFIX, departmentOptions } from "@/lib/departmentCatalog";
 
@@ -191,22 +193,23 @@ export function ProfileForm({
         className={inputClass}
       />
 
-      <select
-        value={universityId}
-        onChange={(e) => {
-          setUniversityId(e.target.value);
+      <Combobox
+        icon={<Buildings size={18} weight="duotone" />}
+        placeholder="Üniversiteni seç"
+        searchPlaceholder="Üniversite ya da şehir ara..."
+        options={universities.map((u) => ({ value: u.id, label: u.name, hint: u.city }))}
+        value={isNewUni ? "" : universityId}
+        onChange={(v) => {
+          setUniversityId(v);
           setDepartmentId("");
         }}
-        className={inputClass}
-      >
-        <option value="">Üniversite seç</option>
-        <option value={NEW}>+ Yeni üniversite ekle</option>
-        {universities.map((u) => (
-          <option key={u.id} value={u.id}>
-            {u.name} — {u.city}
-          </option>
-        ))}
-      </select>
+        createLabel="Yeni üniversite ekle"
+        onCreate={(q) => {
+          setUniversityId(NEW);
+          setNewUniName(q);
+          setDepartmentId("");
+        }}
+      />
 
       {isNewUni && (
         <div className="flex gap-3">
@@ -226,20 +229,20 @@ export function ProfileForm({
       )}
 
       {!isNewUni && (
-        <select
-          value={departmentId}
-          onChange={(e) => setDepartmentId(e.target.value)}
+        <Combobox
+          icon={<GraduationCap size={18} weight="duotone" />}
+          placeholder={universityId ? "Bölümünü seç" : "Önce üniversite seç"}
+          searchPlaceholder="Bölüm ara..."
           disabled={!universityId}
-          className={inputClass}
-        >
-          <option value="">Bölüm seç</option>
-          <option value={NEW}>+ Yeni bölüm ekle</option>
-          {availableDepartments.map((d) => (
-            <option key={d.value} value={d.value}>
-              {d.label}
-            </option>
-          ))}
-        </select>
+          options={availableDepartments}
+          value={departmentId === NEW ? "" : departmentId}
+          onChange={setDepartmentId}
+          createLabel="Yeni bölüm ekle"
+          onCreate={(q) => {
+            setDepartmentId(NEW);
+            setNewDeptName(q);
+          }}
+        />
       )}
 
       {isNewDept && (universityId || isNewUni) && (
@@ -251,18 +254,25 @@ export function ProfileForm({
         />
       )}
 
-      <select
-        value={classYear}
-        onChange={(e) => setClassYear(e.target.value)}
-        className={inputClass}
-      >
-        <option value="">Sınıf seç</option>
-        {CLASS_OPTIONS.map((c) => (
-          <option key={c} value={c}>
-            {c}
-          </option>
-        ))}
-      </select>
+      <div>
+        <p className="mb-2 text-sm text-muted">Sınıfın</p>
+        <div className="flex flex-wrap gap-2">
+          {CLASS_OPTIONS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setClassYear(c)}
+              className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
+                classYear === c
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-foreground hover:border-primary/50"
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {!initial.termsAccepted && (
         <div className="space-y-3 rounded-lg border border-border bg-card p-4 text-sm text-foreground">

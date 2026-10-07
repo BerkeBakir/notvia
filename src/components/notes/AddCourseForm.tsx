@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { CATALOG_PREFIX, departmentOptions } from "@/lib/departmentCatalog";
+import { Combobox } from "@/components/ui/Combobox";
+import { Buildings, GraduationCap } from "@phosphor-icons/react";
 
 const NEW = "__new__";
 
@@ -173,24 +175,23 @@ export function AddCourseForm({
       )}
 
       {/* Üniversite */}
-      <select
-        value={universityId}
-        onChange={(e) => {
-          setUniversityId(e.target.value);
+      <Combobox
+        icon={<Buildings size={18} weight="duotone" />}
+        placeholder="Üniversite seç"
+        searchPlaceholder="Üniversite ya da şehir ara..."
+        options={universities.map((u) => ({ value: u.id, label: u.name, hint: u.city }))}
+        value={isNewUni ? "" : universityId}
+        onChange={(v) => {
+          setUniversityId(v);
           setDepartmentId("");
         }}
-        className={inputClass}
-      >
-        <option value="">Üniversite seç</option>
-        <option value={NEW}>
-          + Yeni üniversite ekle
-        </option>
-        {universities.map((u) => (
-          <option key={u.id} value={u.id}>
-            {u.name} — {u.city}
-          </option>
-        ))}
-      </select>
+        createLabel="Yeni üniversite ekle"
+        onCreate={(q) => {
+          setUniversityId(NEW);
+          setNewUniName(q);
+          setDepartmentId("");
+        }}
+      />
 
       {isNewUni && (
         <div className="flex gap-3">
@@ -211,22 +212,20 @@ export function AddCourseForm({
 
       {/* Bölüm */}
       {!isNewUni && (
-        <select
-          value={departmentId}
-          onChange={(e) => setDepartmentId(e.target.value)}
+        <Combobox
+          icon={<GraduationCap size={18} weight="duotone" />}
+          placeholder={universityId ? "Bölüm seç" : "Önce üniversite seç"}
+          searchPlaceholder="Bölüm ara..."
           disabled={!universityId}
-          className={inputClass}
-        >
-          <option value="">Bölüm seç</option>
-          <option value={NEW}>
-            + Yeni bölüm ekle
-          </option>
-          {availableDepartments.map((d) => (
-            <option key={d.value} value={d.value}>
-              {d.label}
-            </option>
-          ))}
-        </select>
+          options={availableDepartments}
+          value={departmentId === NEW ? "" : departmentId}
+          onChange={setDepartmentId}
+          createLabel="Yeni bölüm ekle"
+          onCreate={(q) => {
+            setDepartmentId(NEW);
+            setNewDeptName(q);
+          }}
+        />
       )}
 
       {isNewDept && (universityId || isNewUni) && (

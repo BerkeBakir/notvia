@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Combobox } from "@/components/ui/Combobox";
 
 interface University {
   id: string;
@@ -60,45 +61,46 @@ export function SearchFilters({
         className={inputClass}
       />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <select
+        <Combobox
+          placeholder="Tüm üniversiteler"
+          searchPlaceholder="Üniversite ara..."
+          clearable
+          options={universities.map((u) => ({ value: u.id, label: u.name }))}
           value={universityId}
-          onChange={(e) => {
-            setUniversityId(e.target.value);
+          onChange={(v) => {
+            setUniversityId(v);
             setDepartmentId("");
           }}
-          className={inputClass}
-        >
-          <option value="">Tüm üniversiteler</option>
-          {universities.map((u) => (
-            <option key={u.id} value={u.id}>
-              {u.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={departmentId}
-          onChange={(e) => setDepartmentId(e.target.value)}
+        />
+        <Combobox
+          placeholder={universityId ? "Tüm bölümler" : "Önce üniversite seç"}
+          searchPlaceholder="Bölüm ara..."
+          clearable
           disabled={!universityId}
-          className={inputClass}
-        >
-          <option value="">Tüm bölümler</option>
-          {availableDepartments.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name}
-            </option>
-          ))}
-        </select>
+          options={availableDepartments.map((d) => ({ value: d.id, label: d.name }))}
+          value={departmentId}
+          onChange={setDepartmentId}
+        />
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value)}
-          className="rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary"
-        >
-          <option value="likes">En beğenilen</option>
-          <option value="created">En yeni</option>
-          <option value="downloads">En çok indirilen</option>
-        </select>
+        <div className="flex rounded-xl border border-border bg-card p-1">
+          {[
+            ["likes", "En beğenilen"],
+            ["created", "En yeni"],
+            ["downloads", "En çok indirilen"],
+          ].map(([v, l]) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setSort(v)}
+              className={`rounded-lg px-3 py-1.5 text-sm transition ${
+                sort === v ? "bg-primary text-primary-foreground" : "text-muted hover:text-foreground"
+              }`}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
         <button
           type="submit"
           className="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90"
