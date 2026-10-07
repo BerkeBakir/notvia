@@ -42,7 +42,7 @@ export function TopicSearch() {
   }
 
   return (
-    <div className="rounded-2xl border border-primary/25 bg-card p-4">
+    <div className="rounded-2xl border border-primary/25 bg-[radial-gradient(120%_120%_at_0%_0%,color-mix(in_oklab,var(--primary)_10%,transparent),transparent_60%)] bg-card p-5">
       <div className="flex items-center gap-2">
         <Sparkle size={20} weight="duotone" className="text-primary" />
         <h2 className="font-heading font-bold text-card-foreground">Konu ara (AI)</h2>
@@ -56,13 +56,13 @@ export function TopicSearch() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Bir konu yaz..."
-          className="flex-1 rounded-full border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none placeholder:text-muted focus:border-primary"
+          className="flex-1 rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted focus:border-primary"
         />
         <button
           type="submit"
           disabled={loading}
           aria-label="Ara"
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
         >
           <MagnifyingGlass size={18} weight="bold" />
         </button>
@@ -80,7 +80,7 @@ export function TopicSearch() {
               <Link
                 key={r.noteId}
                 href={`/notes/${r.noteId}`}
-                className="flex items-start gap-2 rounded-lg border border-border p-3 text-sm hover:border-primary"
+                className="flex items-start gap-2 rounded-xl border border-border bg-background/60 p-3 text-sm transition hover:border-primary"
               >
                 <FileText size={16} className="mt-0.5 shrink-0 text-primary" />
                 <span className="min-w-0">

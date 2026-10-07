@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Combobox } from "@/components/ui/Combobox";
+import { Buildings, GraduationCap, MagnifyingGlass } from "@phosphor-icons/react";
 
 interface University {
   id: string;
@@ -49,19 +50,35 @@ export function SearchFilters({
     router.push(`/search?${params.toString()}`);
   }
 
-  const inputClass =
-    "w-full rounded-lg border border-border bg-card px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted focus:border-primary";
-
   return (
-    <form onSubmit={search} className="space-y-3">
-      <input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="🔍 Not başlığında ara..."
-        className={inputClass}
-      />
+    <form
+      onSubmit={search}
+      className="space-y-4 rounded-2xl border border-border bg-card/50 p-5"
+    >
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <MagnifyingGlass
+            size={18}
+            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"
+          />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Not başlığında ara (ör. vize, veri yapıları, 2024)"
+            className="w-full rounded-xl border border-border bg-card py-3 pl-11 pr-4 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-primary focus:ring-4 focus:ring-primary/10"
+          />
+        </div>
+        <button
+          type="submit"
+          className="rounded-xl bg-primary px-6 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+        >
+          Ara
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Combobox
+          icon={<Buildings size={18} weight="duotone" />}
           placeholder="Tüm üniversiteler"
           searchPlaceholder="Üniversite ara..."
           clearable
@@ -73,6 +90,7 @@ export function SearchFilters({
           }}
         />
         <Combobox
+          icon={<GraduationCap size={18} weight="duotone" />}
           placeholder={universityId ? "Tüm bölümler" : "Önce üniversite seç"}
           searchPlaceholder="Bölüm ara..."
           clearable
@@ -82,31 +100,27 @@ export function SearchFilters({
           onChange={setDepartmentId}
         />
       </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex rounded-xl border border-border bg-card p-1">
-          {[
-            ["likes", "En beğenilen"],
-            ["created", "En yeni"],
-            ["downloads", "En çok indirilen"],
-          ].map(([v, l]) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => setSort(v)}
-              className={`rounded-lg px-3 py-1.5 text-sm transition ${
-                sort === v ? "bg-primary text-primary-foreground" : "text-muted hover:text-foreground"
-              }`}
-            >
-              {l}
-            </button>
-          ))}
-        </div>
-        <button
-          type="submit"
-          className="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90"
-        >
-          Ara
-        </button>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-muted">Sırala:</span>
+        {[
+          ["likes", "En beğenilen"],
+          ["created", "En yeni"],
+          ["downloads", "En çok indirilen"],
+        ].map(([v, l]) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => setSort(v)}
+            className={`rounded-full border px-3 py-1 text-xs transition ${
+              sort === v
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border text-muted hover:border-primary/50 hover:text-foreground"
+            }`}
+          >
+            {l}
+          </button>
+        ))}
       </div>
     </form>
   );
