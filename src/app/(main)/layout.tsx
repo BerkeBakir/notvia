@@ -3,6 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import { ReferralCapture } from "@/components/referral/ReferralCapture";
 import { FloatingAssistant } from "@/components/ai/FloatingAssistant";
 import { StreakPing } from "@/components/StreakPing";
+import { FeedbackBubble } from "@/components/FeedbackBubble";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getCurrentUser, isProfileComplete } from "@/lib/supabase/auth";
@@ -31,6 +32,7 @@ export default async function MainLayout({
       </main>
       <Footer />
       <FloatingAssistant loggedIn={!!user} />
+      <FeedbackBubble loggedIn={!!user} />
       {user && <StreakPing />}
     </div>
   );

@@ -11,6 +11,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { FeedbackBubble } from "@/components/FeedbackBubble";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { mapNoteRow } from "@/lib/supabase/mappers";
 import { createClient } from "@/lib/supabase/server";
@@ -236,6 +237,7 @@ export default async function HomePage() {
       </section>
 
       <Footer />
+      <FeedbackBubble loggedIn={!!user} />
     </div>
   );
 }

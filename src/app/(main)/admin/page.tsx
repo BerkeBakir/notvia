@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getCurrentUser, isModerator } from "@/lib/supabase/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ModerationActions } from "@/components/admin/ModerationActions";
+import { FeedbackStatus } from "@/components/admin/FeedbackStatus";
 
 export default async function AdminPage() {
   const user = await getCurrentUser();
@@ -12,6 +13,12 @@ export default async function AdminPage() {
   if (!admin) {
     return <p className="text-muted">Sunucu yapılandırılmamış (service key yok).</p>;
   }
+
+  const { data: feedback } = await admin
+    .from("feedback")
+    .select("id,kind,message,contact,page,status,created_at")
+    .order("created_at", { ascending: false })
+    .limit(100);
 
   const { data: reports } = await admin
     .from("reports")
@@ -80,6 +87,41 @@ export default async function AdminPage() {
           ))}
         </ul>
       )}
+
+      <section className="space-y-3 pt-6">
+        <h2 className="font-heading text-2xl font-bold text-foreground">
+          💬 Geri bildirimler{" "}
+          <span className="text-base font-normal text-muted">
+            ({(feedback ?? []).filter((f) => f.status === "yeni").length} yeni)
+          </span>
+        </h2>
+        {(feedback ?? []).length === 0 ? (
+          <p className="text-muted">Henüz geri bildirim yok.</p>
+        ) : (
+          <ul className="space-y-3">
+            {(feedback ?? []).map((f) => (
+              <li
+                key={f.id}
+                className={`rounded-2xl border bg-card p-5 ${f.status === "yeni" ? "border-primary/40" : "border-border opacity-80"}`}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
+                      {{ oneri: "💡 Öneri", soru: "❓ Soru", hata: "🐞 Hata", diger: "Diğer" }[f.kind as string] ?? f.kind}
+                    </span>
+                    <p className="mt-2 whitespace-pre-wrap text-sm text-card-foreground">{f.message}</p>
+                    <p className="mt-2 text-xs text-muted">
+                      {f.contact ?? "iletişim yok"} · {f.page ?? "-"} ·{" "}
+                      {new Date(f.created_at).toLocaleString("tr-TR")}
+                    </p>
+                  </div>
+                  <FeedbackStatus id={f.id} status={f.status} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

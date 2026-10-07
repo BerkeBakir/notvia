@@ -13,11 +13,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Sunucu yapılandırılmamış." }, { status: 503 });
   }
 
-  const { action, noteId, reportId } = await request.json().catch(() => ({}));
+  const { action, noteId, reportId, feedbackId, status } = await request.json().catch(() => ({}));
 
   if (action === "deleteNote" && noteId) {
     // Notu sil (ilişkili şikayet/yorum/beğeni FK ile temizlenir)
     const { error } = await admin.from("notes").delete().eq("id", noteId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (action === "feedbackStatus" && feedbackId && ["yeni", "okundu", "cozuldu"].includes(status)) {
+    const { error } = await admin.from("feedback").update({ status }).eq("id", feedbackId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true });
   }
