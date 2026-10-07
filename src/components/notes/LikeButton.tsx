@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { ThumbsUp } from "@phosphor-icons/react";
 
 export function LikeButton({
   noteId,
@@ -23,6 +24,7 @@ export function LikeButton({
   const [liked, setLiked] = useState(initialLiked);
   const [count, setCount] = useState(initialCount);
   const [loading, setLoading] = useState(false);
+  const [pop, setPop] = useState(false);
 
   async function toggle() {
     if (!userId) {
@@ -47,6 +49,7 @@ export function LikeButton({
         .insert({ user_id: userId, note_id: noteId });
       if (!error) {
         setLiked(true);
+        setPop(true);
         setCount((c) => c + 1);
       }
     }
@@ -61,12 +64,17 @@ export function LikeButton({
       aria-pressed={liked}
       className={
         liked
-          ? "inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1.5 text-sm font-medium text-primary disabled:opacity-50"
-          : "inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm text-muted hover:text-primary disabled:opacity-50"
+          ? "inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/15 px-3.5 py-2 text-sm font-medium text-primary transition disabled:opacity-60"
+          : "inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-sm text-muted transition hover:border-primary/40 hover:text-primary disabled:opacity-60"
       }
     >
-      <span>{liked ? "♥" : "♡"}</span>
-      <span>{count}</span>
+      <ThumbsUp
+        size={18}
+        weight={liked ? "fill" : "regular"}
+        className={pop ? "vote-pop" : ""}
+        onAnimationEnd={() => setPop(false)}
+      />
+      <span className="tabular-nums">{count}</span>
     </button>
   );
 }

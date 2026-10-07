@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Eye } from "@phosphor-icons/react/dist/ssr";
 import type { Note } from "@/types";
 import { LikeButton } from "@/components/notes/LikeButton";
 import { DownloadButton } from "@/components/notes/DownloadButton";
@@ -63,8 +64,8 @@ export function NoteCard({
           </Link>
         </h3>
         {rating !== null && (
-          <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-xs text-accent">
-            ★ {rating.toFixed(1)}
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-0.5 text-xs text-foreground">
+            <span className="text-accent">★</span> {rating.toFixed(1)}
           </span>
         )}
       </div>
@@ -95,9 +96,9 @@ export function NoteCard({
           href={note.fileUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-4 inline-block rounded-lg bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground hover:opacity-90"
+          className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-center text-sm font-medium text-primary-foreground transition hover:opacity-90"
         >
-          PDF&apos;i Görüntüle
+          <Eye size={16} weight="bold" /> PDF&apos;i Görüntüle
         </a>
       )}
       {note.fileUrl && <AiSummary noteId={note.id} isPro={isPro} title={note.title} />}

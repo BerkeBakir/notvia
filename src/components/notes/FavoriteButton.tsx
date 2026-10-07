@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { BookmarkSimple } from "@phosphor-icons/react";
 
 export function FavoriteButton({
   noteId,
@@ -47,11 +48,11 @@ export function FavoriteButton({
       aria-pressed={saved}
       className={
         saved
-          ? "inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-3 py-1.5 text-sm font-medium text-accent disabled:opacity-50"
-          : "inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm text-muted hover:text-accent disabled:opacity-50"
+          ? "inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/15 px-3.5 py-2 text-sm font-medium text-accent transition disabled:opacity-50"
+          : "inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-sm text-muted transition hover:border-accent/40 hover:text-accent disabled:opacity-50"
       }
     >
-      <span>{saved ? "★" : "☆"}</span>
+      <BookmarkSimple size={18} weight={saved ? "fill" : "regular"} />
       <span>{saved ? "Kaydedildi" : "Kaydet"}</span>
     </button>
   );

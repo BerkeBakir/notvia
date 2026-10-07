@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Eye } from "@phosphor-icons/react/dist/ssr";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser, isPaid } from "@/lib/supabase/auth";
@@ -212,9 +213,9 @@ export default async function NoteDetailPage({
           href={note.file_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-4 inline-block rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90"
+          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:opacity-90"
         >
-          PDF&apos;i Görüntüle
+          <Eye size={18} weight="bold" /> PDF&apos;i Görüntüle
         </a>
 
         <AiSummary noteId={note.id} isPro={user?.plan === "pro"} title={note.title} />

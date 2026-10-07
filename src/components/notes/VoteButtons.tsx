@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { computeRating } from "@/lib/rating";
+import { Star, ThumbsDown, ThumbsUp } from "@phosphor-icons/react";
 
 export function VoteButtons({
   noteId,
@@ -30,6 +31,7 @@ export function VoteButtons({
   const [likes, setLikes] = useState(initialLikes);
   const [dislikes, setDislikes] = useState(initialDislikes);
   const [loading, setLoading] = useState(false);
+  const [pop, setPop] = useState<"up" | "down" | null>(null);
 
   async function like() {
     if (!userId) return router.push("/login");
@@ -41,6 +43,7 @@ export function VoteButtons({
     } else {
       await supabase.from("likes").insert({ user_id: userId, note_id: noteId });
       setLiked(true);
+      setPop("up");
       setLikes((c) => c + 1);
       if (disliked) {
         await supabase.from("dislikes").delete().eq("user_id", userId).eq("note_id", noteId);
@@ -61,6 +64,7 @@ export function VoteButtons({
     } else {
       await supabase.from("dislikes").insert({ user_id: userId, note_id: noteId });
       setDisliked(true);
+      setPop("down");
       setDislikes((c) => c + 1);
       if (liked) {
         await supabase.from("likes").delete().eq("user_id", userId).eq("note_id", noteId);
@@ -73,39 +77,60 @@ export function VoteButtons({
 
   const rating = computeRating(likes, dislikes);
 
+  const lockTitle = isOwner ? "Kendi notuna oy veremezsin" : undefined;
+
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button
-        onClick={like}
-        disabled={loading || isOwner}
-        title={isOwner ? "Kendi notunu beğenemezsin" : undefined}
-        className={
-          liked
-            ? "inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1.5 text-sm font-medium text-primary disabled:opacity-50"
-            : "inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm text-muted hover:text-primary disabled:opacity-50"
-        }
+      <div
+        className={`inline-flex items-stretch overflow-hidden rounded-full border border-border bg-card ${
+          isOwner ? "opacity-60" : ""
+        }`}
+        title={lockTitle}
       >
-        <span>{liked ? "♥" : "♡"}</span>
-        <span>{likes}</span>
-      </button>
-
-      <button
-        onClick={dislike}
-        disabled={loading || isOwner}
-        title={isOwner ? "Kendi notuna oy veremezsin" : undefined}
-        className={
-          disliked
-            ? "inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-3 py-1.5 text-sm font-medium text-red-400 disabled:opacity-50"
-            : "inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm text-muted hover:text-red-400 disabled:opacity-50"
-        }
-      >
-        <span>👎</span>
-        <span>{dislikes}</span>
-      </button>
+        <button
+          onClick={like}
+          disabled={loading || isOwner}
+          aria-pressed={liked}
+          aria-label="Beğen"
+          className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium transition disabled:cursor-not-allowed ${
+            liked ? "bg-primary/15 text-primary" : "text-muted hover:bg-primary/5 hover:text-primary"
+          }`}
+        >
+          <ThumbsUp
+            size={18}
+            weight={liked ? "fill" : "regular"}
+            className={pop === "up" ? "vote-pop" : ""}
+            onAnimationEnd={() => setPop(null)}
+          />
+          <span className="tabular-nums">{likes}</span>
+        </button>
+        <span className="w-px bg-border" aria-hidden="true" />
+        <button
+          onClick={dislike}
+          disabled={loading || isOwner}
+          aria-pressed={disliked}
+          aria-label="Beğenme"
+          className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium transition disabled:cursor-not-allowed ${
+            disliked ? "bg-red-500/15 text-red-400" : "text-muted hover:bg-red-500/5 hover:text-red-400"
+          }`}
+        >
+          <ThumbsDown
+            size={18}
+            weight={disliked ? "fill" : "regular"}
+            className={pop === "down" ? "vote-pop" : ""}
+            onAnimationEnd={() => setPop(null)}
+          />
+          <span className="tabular-nums">{dislikes}</span>
+        </button>
+      </div>
 
       {rating !== null && (
-        <span className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-sm text-accent">
-          ★ {rating.toFixed(1)}{" "}
+        <span
+          className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-2 text-sm"
+          title={`${likes + dislikes} oydan hesaplandı`}
+        >
+          <Star size={16} weight="fill" className="text-accent" />
+          <span className="font-medium tabular-nums text-foreground">{rating.toFixed(1)}</span>
           <span className="text-muted">/ 5</span>
         </span>
       )}
