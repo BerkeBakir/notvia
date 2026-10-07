@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBrevoEmail } from "@/lib/email/brevo";
+import { esc } from "@/lib/email/escape";
 
 export async function POST(request: NextRequest) {
   // Sadece giriş yapmış kullanıcı tetikleyebilir
@@ -27,11 +28,15 @@ export async function POST(request: NextRequest) {
   // Not + ders bilgisi
   const { data: note } = await admin
     .from("notes")
-    .select("id,title,type,course_id,user_id")
+    .select("id,title,type,course_id,user_id,created_at")
     .eq("id", noteId)
     .single();
   if (!note || !note.course_id) {
     return NextResponse.json({ ok: true, sent: 0 });
+  }
+  // Kötüye kullanım: yalnızca notun sahibi, yükledikten kısa süre sonra tetikleyebilir (tekrar tekrar mail yağdırılamaz)
+  if (note.user_id !== user.id || Date.now() - new Date(note.created_at).getTime() > 10 * 60 * 1000) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
   const { data: course } = await admin
@@ -75,9 +80,9 @@ export async function POST(request: NextRequest) {
         html: `
           <div style="font-family:sans-serif;max-width:480px;margin:auto">
             <h2 style="color:#047857">Notvia</h2>
-            <p>Merhaba ${r.name ?? ""},</p>
-            <p><b>${courseName}</b> dersine yeni bir ${kind} eklendi:</p>
-            <p style="font-size:18px"><b>${note.title}</b></p>
+            <p>Merhaba ${esc(r.name)},</p>
+            <p><b>${esc(courseName)}</b> dersine yeni bir ${kind} eklendi:</p>
+            <p style="font-size:18px"><b>${esc(note.title)}</b></p>
             <p>
               <a href="${courseUrl}"
                  style="display:inline-block;background:#047857;color:#ffffff;

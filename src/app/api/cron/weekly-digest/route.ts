@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBrevoEmail } from "@/lib/email/brevo";
+import { esc } from "@/lib/email/escape";
 
 export const maxDuration = 60;
 
@@ -10,7 +11,7 @@ export const maxDuration = 60;
  */
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
-  if (secret && request.headers.get("authorization") !== `Bearer ${secret}`) {
+  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const admin = createAdminClient();
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
     const items = perUser.get(u.id) ?? [];
     if (items.length === 0) continue;
     const rows = items
-      .map((i) => `<li style="margin-bottom:4px"><b>${i.course}</b>: ${i.title}</li>`)
+      .map((i) => `<li style="margin-bottom:4px"><b>${esc(i.course)}</b>: ${esc(i.title)}</li>`)
       .join("");
     try {
       await sendBrevoEmail({
@@ -75,7 +76,7 @@ export async function GET(request: NextRequest) {
         html: `
           <div style="font-family:sans-serif;max-width:480px;margin:auto">
             <h2 style="color:#047857">Notvia — Haftalık Özet</h2>
-            <p>Merhaba ${u.name ?? ""}, takip ettiğin derslere bu hafta eklenenler:</p>
+            <p>Merhaba ${esc(u.name)}, takip ettiğin derslere bu hafta eklenenler:</p>
             <ul style="padding-left:18px">${rows}</ul>
             <p><a href="${siteUrl}" style="display:inline-block;background:#047857;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600">Notvia'ya Git</a></p>
             <p style="color:#64748b;font-size:12px">Ders bildirimlerini açtığın için bu e-postayı aldın.</p>
