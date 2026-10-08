@@ -54,16 +54,24 @@ function range(a: number, b: number): number[] {
 }
 
 /** Bir PDF parçasını Gemini'ye okutup düz metnini döndürür. */
-async function ocrBatch(apiKey: string, bytes: Uint8Array): Promise<string> {
+const PROMPTS = {
+  scan:
+    "Bu PDF taranmış ders notu sayfaları içeriyor. İçindeki TÜM metni olduğu gibi, " +
+    "düz metin olarak çıkar (transkribe et). Yorum ekleme, sadece metni ver.",
+  visual:
+    "Bu PDF ders slaytları. Slaytların yazılı metni zaten ayrıca çıkarıldı; senden SADECE görsel içeriği " +
+    "istiyorum. Her sayfadaki şekil, grafik, tablo, şema, diyagram, formül görseli ve resimlerin taşıdığı " +
+    "bilgiyi Türkçe olarak açıkla: tablo ise satır/sütun değerlerini yaz, grafik ise eksenleri, değerleri ve " +
+    "eğilimi, şema/diyagram ise öğeleri ve aralarındaki ilişkiyi anlat. Her açıklamanın başına 'Sayfa N (görsel):' yaz. " +
+    "Görseli olmayan ya da sadece süs/logo içeren sayfaları atla. Uydurma; görselde olmayan bilgi ekleme.",
+};
+
+async function ocrBatch(apiKey: string, bytes: Uint8Array, mode: keyof typeof PROMPTS = "scan"): Promise<string> {
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: OCR_MODEL });
   const result = await model.generateContent([
     { inlineData: { mimeType: "application/pdf", data: Buffer.from(bytes).toString("base64") } },
-    {
-      text:
-        "Bu PDF taranmış ders notu sayfaları içeriyor. İçindeki TÜM metni olduğu gibi, " +
-        "düz metin olarak çıkar (transkribe et). Yorum ekleme, sadece metni ver.",
-    },
+    { text: PROMPTS[mode] },
   ]);
   return result.response.text() ?? "";
 }
@@ -72,14 +80,14 @@ async function ocrBatch(apiKey: string, bytes: Uint8Array): Promise<string> {
  * Taranmış PDF'in tamamını (sayfa gruplarına bölerek) OCR'lar.
  * GEMINI_API_KEY yoksa boş string döner.
  */
-export async function ocrPdf(buffer: Buffer): Promise<string> {
+export async function ocrPdf(buffer: Buffer, mode: keyof typeof PROMPTS = "scan"): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return "";
   const batches = await splitPdfIntoBatches(buffer);
   const texts: string[] = [];
   for (const b of batches) {
     try {
-      const t = await ocrBatch(apiKey, b);
+      const t = await ocrBatch(apiKey, b, mode);
       if (t.trim()) texts.push(t.trim());
     } catch {
       // bir parça başarısız olsa diğerlerine devam

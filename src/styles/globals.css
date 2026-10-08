@@ -200,3 +200,11 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   .vote-pop { animation: none; }
 }
+
+/* Sayfa hazır olmadan (hydration öncesi) JS'e bağlı düğmeler tıklanamaz ve soluk görünür —
+   tıklama sessizce kaybolmasın. Form gönderen düğmeler (type=submit) JS olmadan da çalıştığı için hariç. */
+html:not([data-hydrated]) main button:not([type="submit"]) {
+  pointer-events: none;
+  opacity: 0.6;
+  cursor: progress;
+}

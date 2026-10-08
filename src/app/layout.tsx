@@ -4,6 +4,7 @@ import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
+import { HydrationMarker } from "@/components/HydrationMarker";
 import "@/styles/globals.css";
 
 const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
@@ -86,6 +87,7 @@ export default function RootLayout({
         )}
         <ThemeProvider>{children}</ThemeProvider>
         <ServiceWorkerRegister />
+        <HydrationMarker />
         <Analytics />
       </body>
     </html>

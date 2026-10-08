@@ -37,9 +37,12 @@ export async function indexNote(
   // PDF'lerde çalışmaz — boşuna kota harcanmaz.
   if (process.env.GEMINI_API_KEY) {
     const pages = await pdfPageCount(buf);
-    const scanned = fullText.length < 400 || (pages > 0 && fullText.length / pages < 80);
-    if (scanned) {
-      const ocrText = await ocrPdf(buf);
+    const perPage = pages > 0 ? fullText.length / pages : fullText.length;
+    const scanned = fullText.length < 400 || perPage < 80;
+    // Slayt destesi: metin az, bilginin önemli kısmı şekil/grafik/tablolarda → görselleri açıklat
+    const slideDeck = !scanned && pages > 0 && perPage < 300;
+    if (scanned || slideDeck) {
+      const ocrText = await ocrPdf(buf, scanned ? "scan" : "visual");
       if (ocrText) fullText = `${fullText}\n\n${ocrText}`.trim();
     }
   }
