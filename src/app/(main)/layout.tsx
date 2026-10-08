@@ -1,6 +1,5 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { ReferralCapture } from "@/components/referral/ReferralCapture";
 import { FloatingAssistant } from "@/components/ai/FloatingAssistant";
 import { StreakPing } from "@/components/StreakPing";
 import { FeedbackBubble } from "@/components/FeedbackBubble";
@@ -25,7 +24,6 @@ export default async function MainLayout({
   }
   return (
     <div className="flex min-h-screen flex-col">
-      <ReferralCapture />
       <Header />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-8 pb-24">
         {children}
