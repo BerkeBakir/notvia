@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { computeRating } from "@/lib/rating";
+import { toggleDislike, toggleLike } from "@/lib/actions/votes";
 import { Star, ThumbsDown, ThumbsUp } from "@phosphor-icons/react";
 
 export function VoteButtons({
   noteId,
-  userId,
   initialLiked,
   initialDisliked,
   initialLikes,
@@ -16,63 +14,50 @@ export function VoteButtons({
   isOwner = false,
 }: {
   noteId: string;
-  userId: string | null;
+  userId?: string | null;
   initialLiked: boolean;
   initialDisliked: boolean;
   initialLikes: number;
   initialDislikes: number;
-  /** Kendi notu: oy veremez (DB'de de RLS ile engelli). */
+  /** Kendi notu: oy veremez (sunucuda da engelli). */
   isOwner?: boolean;
 }) {
-  const router = useRouter();
-  const supabase = createClient();
   const [liked, setLiked] = useState(initialLiked);
   const [disliked, setDisliked] = useState(initialDisliked);
   const [likes, setLikes] = useState(initialLikes);
   const [dislikes, setDislikes] = useState(initialDislikes);
-  const [loading, setLoading] = useState(false);
   const [pop, setPop] = useState<"up" | "down" | null>(null);
 
-  async function like() {
-    if (!userId) return router.push("/login");
-    setLoading(true);
+  // Anında (iyimser) arayüz güncellemesi; asıl kayıt form eylemiyle sunucuda yapılır.
+  // Form eylemi sayesinde sayfa henüz yüklenmeden tıklansa da oy kaydedilir.
+  function onLike() {
     if (liked) {
-      await supabase.from("likes").delete().eq("user_id", userId).eq("note_id", noteId);
       setLiked(false);
       setLikes((c) => Math.max(c - 1, 0));
     } else {
-      await supabase.from("likes").insert({ user_id: userId, note_id: noteId });
       setLiked(true);
       setPop("up");
       setLikes((c) => c + 1);
       if (disliked) {
-        await supabase.from("dislikes").delete().eq("user_id", userId).eq("note_id", noteId);
         setDisliked(false);
         setDislikes((c) => Math.max(c - 1, 0));
       }
     }
-    setLoading(false);
   }
 
-  async function dislike() {
-    if (!userId) return router.push("/login");
-    setLoading(true);
+  function onDislike() {
     if (disliked) {
-      await supabase.from("dislikes").delete().eq("user_id", userId).eq("note_id", noteId);
       setDisliked(false);
       setDislikes((c) => Math.max(c - 1, 0));
     } else {
-      await supabase.from("dislikes").insert({ user_id: userId, note_id: noteId });
       setDisliked(true);
       setPop("down");
       setDislikes((c) => c + 1);
       if (liked) {
-        await supabase.from("likes").delete().eq("user_id", userId).eq("note_id", noteId);
         setLiked(false);
         setLikes((c) => Math.max(c - 1, 0));
       }
     }
-    setLoading(false);
   }
 
   const rating = computeRating(likes, dislikes);
@@ -87,9 +72,10 @@ export function VoteButtons({
         }`}
         title={lockTitle}
       >
+        <form action={toggleLike.bind(null, noteId)} onSubmit={onLike} className="contents">
         <button
-          onClick={like}
-          disabled={loading || isOwner}
+          type="submit"
+          disabled={isOwner}
           aria-pressed={liked}
           aria-label="Beğen"
           className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium transition disabled:cursor-not-allowed ${
@@ -104,10 +90,12 @@ export function VoteButtons({
           />
           <span className="tabular-nums">{likes}</span>
         </button>
+        </form>
         <span className="w-px bg-border" aria-hidden="true" />
+        <form action={toggleDislike.bind(null, noteId)} onSubmit={onDislike} className="contents">
         <button
-          onClick={dislike}
-          disabled={loading || isOwner}
+          type="submit"
+          disabled={isOwner}
           aria-pressed={disliked}
           aria-label="Beğenme"
           className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium transition disabled:cursor-not-allowed ${
@@ -122,6 +110,7 @@ export function VoteButtons({
           />
           <span className="tabular-nums">{dislikes}</span>
         </button>
+        </form>
       </div>
 
       {rating !== null && (

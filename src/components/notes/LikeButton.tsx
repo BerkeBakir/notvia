@@ -1,65 +1,42 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { ThumbsUp } from "@phosphor-icons/react";
+import { toggleLike } from "@/lib/actions/votes";
 
 export function LikeButton({
   noteId,
-  userId,
   initialLiked,
   initialCount,
   isOwner = false,
 }: {
   noteId: string;
-  userId: string | null;
+  userId?: string | null;
   initialLiked: boolean;
   initialCount: number;
-  /** Kendi notu: beğenemez (DB'de de RLS ile engelli). */
+  /** Kendi notu: beğenemez (sunucuda da engelli). */
   isOwner?: boolean;
 }) {
-  const router = useRouter();
-  const supabase = createClient();
   const [liked, setLiked] = useState(initialLiked);
   const [count, setCount] = useState(initialCount);
-  const [loading, setLoading] = useState(false);
   const [pop, setPop] = useState(false);
 
-  async function toggle() {
-    if (!userId) {
-      router.push("/login");
-      return;
-    }
-    setLoading(true);
-
+  function onSubmit() {
     if (liked) {
-      const { error } = await supabase
-        .from("likes")
-        .delete()
-        .eq("user_id", userId)
-        .eq("note_id", noteId);
-      if (!error) {
-        setLiked(false);
-        setCount((c) => Math.max(c - 1, 0));
-      }
+      setLiked(false);
+      setCount((c) => Math.max(c - 1, 0));
     } else {
-      const { error } = await supabase
-        .from("likes")
-        .insert({ user_id: userId, note_id: noteId });
-      if (!error) {
-        setLiked(true);
-        setPop(true);
-        setCount((c) => c + 1);
-      }
+      setLiked(true);
+      setPop(true);
+      setCount((c) => c + 1);
     }
-    setLoading(false);
   }
 
   return (
+    <form action={toggleLike.bind(null, noteId)} onSubmit={onSubmit} className="contents">
     <button
-      onClick={toggle}
-      disabled={loading || isOwner}
+      type="submit"
+      disabled={isOwner}
       title={isOwner ? "Kendi notunu beğenemezsin" : undefined}
       aria-pressed={liked}
       className={
@@ -76,5 +53,6 @@ export function LikeButton({
       />
       <span className="tabular-nums">{count}</span>
     </button>
+    </form>
   );
 }
