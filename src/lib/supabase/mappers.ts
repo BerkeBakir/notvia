@@ -1,6 +1,6 @@
 import type { Note } from "@/types";
 
-interface NoteRow {
+export interface NoteRow {
   id: string;
   user_id: string;
   title: string;

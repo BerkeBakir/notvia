@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/auth";
-import { mapNoteRow } from "@/lib/supabase/mappers";
+import { mapNoteRow, type NoteRow } from "@/lib/supabase/mappers";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { SearchFilters } from "@/components/notes/SearchFilters";
 import { TopicSearch } from "@/components/notes/TopicSearch";
@@ -36,7 +36,7 @@ export default async function SearchPage({
     const sortColumn =
       sp.sort === "created" ? "created_at" : sp.sort === "downloads" ? "downloads" : "likes";
 
-    let data: Record<string, unknown>[] | null = null;
+    let data: NoteRow[] | null = null;
     if (sp.q?.trim()) {
       // Türkçe dostu arama (harf katlama + ek toleransı, başlık/açıklama/ders adı)
       const { data: hits } = await supabase.rpc("search_note_ids", { q: sp.q, dep: sp.dep || null, lim: 60 });
