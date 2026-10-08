@@ -20,6 +20,7 @@ import {
   Trophy,
   User,
   Bell,
+  GearSix,
   Target,
   Calculator,
   CalendarCheck,
@@ -71,6 +72,7 @@ const GROUPS: { title: string; items: Item[]; auth?: boolean }[] = [
     items: [
       { href: "/profile", label: "Profilim", icon: User },
       { href: "/notifications", label: "Bildirimler", icon: Bell },
+      { href: "/ayarlar", label: "Hesap ayarları", icon: GearSix, desc: "Şifre, hesap silme" },
     ],
   },
 ];

@@ -171,6 +171,12 @@ export default async function ProfilePage({
               >
                 Herkese açık profil
               </Link>
+              <Link
+                href="/ayarlar"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm text-foreground transition hover:border-primary hover:text-primary"
+              >
+                Hesap ayarları
+              </Link>
             </div>
           </div>
 
