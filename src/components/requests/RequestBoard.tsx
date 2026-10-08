@@ -89,6 +89,11 @@ export function RequestBoard({
 
   return (
     <div className="space-y-3">
+      {courseId && (
+        <p className="text-xs text-muted">
+          {open.length} açık istek{done.length ? ` · ${done.length} karşılandı` : ""}
+        </p>
+      )}
       {showCreate && courseId && (
         <>
           {!formOpen ? (

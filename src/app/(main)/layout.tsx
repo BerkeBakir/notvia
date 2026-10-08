@@ -27,7 +27,7 @@ export default async function MainLayout({
     <div className="flex min-h-screen flex-col">
       <ReferralCapture />
       <Header />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-8 pb-24">
         {children}
       </main>
       <Footer />

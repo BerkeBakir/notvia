@@ -57,7 +57,7 @@ export function NotificationList({ userId, initial }: { userId: string; initial:
               <span className="text-lg">{NOTIFICATION_ICONS[n.type] ?? "🔔"}</span>
               <div className="flex-1">
                 <p className="text-sm text-foreground">{n.message}</p>
-                <p className="mt-1 text-xs text-muted">{new Date(n.created_at).toLocaleString("tr-TR")}</p>
+                <p className="mt-1 text-xs text-muted">{new Date(n.created_at).toLocaleString("tr-TR", { timeZone: "Europe/Istanbul" })}</p>
               </div>
               {!n.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />}
             </button>

@@ -78,7 +78,7 @@ export default async function AdminPage() {
                   <p className="mt-1 text-sm text-red-400">⚑ {r.reason}</p>
                   <p className="mt-1 text-xs text-muted">
                     {reporterName.get(r.user_id ?? "") ?? "Anonim"} ·{" "}
-                    {new Date(r.created_at).toLocaleString("tr-TR")}
+                    {new Date(r.created_at).toLocaleString("tr-TR", { timeZone: "Europe/Istanbul" })}
                   </p>
                 </div>
                 <ModerationActions noteId={r.note_id} reportId={r.id} />
@@ -112,7 +112,7 @@ export default async function AdminPage() {
                     <p className="mt-2 whitespace-pre-wrap text-sm text-card-foreground">{f.message}</p>
                     <p className="mt-2 text-xs text-muted">
                       {f.contact ?? "iletişim yok"} · {f.page ?? "-"} ·{" "}
-                      {new Date(f.created_at).toLocaleString("tr-TR")}
+                      {new Date(f.created_at).toLocaleString("tr-TR", { timeZone: "Europe/Istanbul" })}
                     </p>
                   </div>
                   <FeedbackStatus id={f.id} status={f.status} />

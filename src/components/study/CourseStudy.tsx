@@ -47,7 +47,7 @@ const STUDIO: { kind: StudioKind; label: string; desc: string; Icon: typeof Book
 const SUGGESTIONS = [
   "Bu notlardaki ana konular neler?",
   "En zor konuyu basitçe anlat",
-  "Sınavda neler çıkabilir?",
+  "Bu notlarda en çok vurgulanan, sınava girebilecek konular ve örnek sorular neler?",
 ];
 
 interface Output {
@@ -367,7 +367,7 @@ export function CourseStudy({
                     <CircleNotch size={14} className="animate-spin text-primary" />
                   ) : (
                     <span className="text-muted">
-                      {new Date(o.createdAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                      {new Date(o.createdAt).toLocaleTimeString("tr-TR", { timeZone: "Europe/Istanbul", hour: "2-digit", minute: "2-digit" })}
                     </span>
                   )}
                 </button>

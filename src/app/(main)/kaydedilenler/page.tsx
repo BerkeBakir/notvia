@@ -58,7 +58,7 @@ export default async function SavedPage() {
             <div key={it.id} className="rounded-2xl border border-border bg-card p-5">
               <div className="mb-2 flex items-center justify-between">
                 <span className="flex flex-wrap items-center gap-2 text-xs text-muted">
-                  {new Date(it.created_at).toLocaleDateString("tr-TR", {
+                  {new Date(it.created_at).toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul",
                     day: "2-digit",
                     month: "long",
                     year: "numeric",

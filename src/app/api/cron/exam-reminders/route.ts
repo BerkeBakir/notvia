@@ -56,13 +56,18 @@ export async function GET(request: NextRequest) {
       hour: "2-digit",
       minute: "2-digit",
     });
-    const label = e.stage === "1d" ? "yarın" : `${Math.ceil(e.left / 86400_000)} gün sonra`;
+    // Takvim gününe göre (İstanbul): bugün / yarın / N gün sonra
+    const day = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "Europe/Istanbul" });
+    const diffDays = Math.round(
+      (new Date(day(new Date(e.exam_at))).getTime() - new Date(day(new Date(now))).getTime()) / 86400_000,
+    );
+    const label = diffDays <= 0 ? "bugün" : diffDays === 1 ? "yarın" : `${diffDays} gün sonra`;
     const studyUrl = e.course_id ? `${siteUrl}/courses/${e.course_id}` : `${siteUrl}/takvim`;
 
     await admin.from("notifications").insert({
       user_id: e.user_id,
       type: "exam",
-      message: `⏰ ${e.title} ${label} (${when})`,
+      message: `${e.title} ${label} (${when})`,
       link: e.course_id ? `/courses/${e.course_id}` : "/takvim",
     });
 

@@ -104,7 +104,7 @@ export function CommentSection({
                 {c.authorName}
               </Link>
               <span className="text-xs text-muted">
-                {new Date(c.created_at).toLocaleDateString("tr-TR")}
+                {new Date(c.created_at).toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul" })}
               </span>
             </div>
             <p className="mt-1 whitespace-pre-wrap text-sm text-muted">

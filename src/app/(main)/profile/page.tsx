@@ -94,7 +94,7 @@ export default async function ProfilePage({
   const earned = badges.filter((b) => b.earned).length;
   const streak = me?.streak_count ?? 0;
   const joined = me?.created_at
-    ? new Date(me.created_at).toLocaleDateString("tr-TR", { month: "long", year: "numeric" })
+    ? new Date(me.created_at).toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul", month: "long", year: "numeric" })
     : null;
 
   // Sekme içerikleri (yalnızca seçilen sekme için sorgu)
@@ -189,7 +189,7 @@ export default async function ProfilePage({
                 <Flame size={13} weight="fill" /> {streak} günlük seri
               </span>
             )}
-            {joined && <span className="rounded-full bg-border/60 px-3 py-1 text-muted">{joined}&apos;den beri üye</span>}
+            {joined && <span className="rounded-full bg-border/60 px-3 py-1 text-muted">Üyelik: {joined}</span>}
           </div>
 
           {/* Seviye ilerlemesi */}
@@ -399,7 +399,7 @@ export default async function ProfilePage({
                     >
                       <p className="line-clamp-2 text-sm text-foreground">{c.content}</p>
                       <p className="mt-1 text-xs text-muted">
-                        {noteTitle.get(c.note_id) ?? "Not"} · {new Date(c.created_at).toLocaleDateString("tr-TR")}
+                        {noteTitle.get(c.note_id) ?? "Not"} · {new Date(c.created_at).toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul" })}
                       </p>
                     </Link>
                   </li>

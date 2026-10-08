@@ -121,7 +121,7 @@ export function NotificationBell({ userId, initialUnread }: { userId: string; in
                       {n.message}
                     </span>
                     <span className="mt-0.5 block text-[11px] text-muted">
-                      {new Date(n.created_at).toLocaleString("tr-TR")}
+                      {new Date(n.created_at).toLocaleString("tr-TR", { timeZone: "Europe/Istanbul" })}
                     </span>
                   </span>
                   {!n.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />}

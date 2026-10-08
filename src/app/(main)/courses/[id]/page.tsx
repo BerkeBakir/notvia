@@ -205,10 +205,7 @@ export default async function CoursePage({
 
       <section className="rounded-2xl border border-border bg-card/50 p-5">
         <h2 className="mb-3 font-heading text-lg font-semibold text-foreground">
-          🙋 Not istekleri{" "}
-          <span className="text-sm font-normal text-muted">
-            {requests.filter((r) => r.status === "open").length} açık
-          </span>
+          🙋 Not istekleri
         </h2>
         <RequestBoard items={requests} userId={user?.id ?? null} courseId={course.id} />
       </section>
