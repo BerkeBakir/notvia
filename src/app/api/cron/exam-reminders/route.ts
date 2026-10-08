@@ -21,20 +21,27 @@ export async function GET(request: NextRequest) {
   if (!admin) return NextResponse.json({ ok: true, sent: 0, configured: false });
 
   const now = Date.now();
-  const in3d = new Date(now + 3 * 86400_000).toISOString();
+  // Takvim günü (İstanbul) farkı: cron sabah çalıştığı için saat bazlı 24/72 saat penceresi
+  // "yarınki" sınavları kaçırıyordu (ör. yarın 10:00 → bu sabah 25 saat kalmış oluyor).
+  const day = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "Europe/Istanbul" });
+  const dayDiff = (iso: string) =>
+    Math.round((new Date(day(new Date(iso))).getTime() - new Date(day(new Date(now))).getTime()) / 86400_000);
+  const in4d = new Date(now + 4 * 86400_000).toISOString();
   const { data: exams } = await admin
     .from("exams")
     .select("id,user_id,course_id,title,kind,exam_at,location,reminded_3d,reminded_1d")
     .eq("remind", true)
     .gt("exam_at", new Date(now).toISOString())
-    .lte("exam_at", in3d)
+    .lte("exam_at", in4d)
     .or("reminded_3d.eq.false,reminded_1d.eq.false");
   if (!exams?.length) return NextResponse.json({ ok: true, sent: 0 });
 
   const due = exams
     .map((e) => {
       const left = new Date(e.exam_at).getTime() - now;
-      const stage: "1d" | "3d" | null = left <= 86400_000 ? (e.reminded_1d ? null : "1d") : e.reminded_3d ? null : "3d";
+      const dd = dayDiff(e.exam_at);
+      const stage: "1d" | "3d" | null =
+        dd <= 1 ? (e.reminded_1d ? null : "1d") : dd <= 3 ? (e.reminded_3d ? null : "3d") : null;
       return { ...e, stage, left };
     })
     .filter((e) => e.stage);
@@ -57,10 +64,7 @@ export async function GET(request: NextRequest) {
       minute: "2-digit",
     });
     // Takvim gününe göre (İstanbul): bugün / yarın / N gün sonra
-    const day = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "Europe/Istanbul" });
-    const diffDays = Math.round(
-      (new Date(day(new Date(e.exam_at))).getTime() - new Date(day(new Date(now))).getTime()) / 86400_000,
-    );
+    const diffDays = dayDiff(e.exam_at);
     const label = diffDays <= 0 ? "bugün" : diffDays === 1 ? "yarın" : `${diffDays} gün sonra`;
     const studyUrl = e.course_id ? `${siteUrl}/courses/${e.course_id}` : `${siteUrl}/takvim`;
 
