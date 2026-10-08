@@ -27,7 +27,11 @@ export function DownloadButton({
   function runDownload() {
     // Sayaç arka planda; indirme tarayıcının kendi indiricisiyle hemen başlar
     // (büyük dosyayı önce belleğe çekmez). Supabase ?download= ekini zorlar.
-    void supabase.rpc("increment_download", { note_id: noteId });
+    // Not: Supabase sorguları tembeldir — .then() olmadan istek hiç gönderilmez
+    supabase.rpc("increment_download", { note_id: noteId }).then(
+      () => {},
+      () => {},
+    );
     setCount((c) => c + 1);
     const sep = fileUrl.includes("?") ? "&" : "?";
     const a = document.createElement("a");
