@@ -33,31 +33,24 @@ export default async function SearchPage({
   const hasQuery = !!sp.q || !!sp.dep;
   let notes: ReturnType<typeof mapNoteRow>[] = [];
   if (hasQuery) {
-    let courseIds: string[] | null = null;
-    if (sp.dep) {
-      const { data: courses } = await supabase
-        .from("courses")
-        .select("id")
-        .eq("department_id", sp.dep);
-      courseIds = (courses ?? []).map((c) => c.id);
-    }
-
     const sortColumn =
-      sp.sort === "created"
-        ? "created_at"
-        : sp.sort === "downloads"
-          ? "downloads"
-          : "likes";
+      sp.sort === "created" ? "created_at" : sp.sort === "downloads" ? "downloads" : "likes";
 
-    let query = supabase
-      .from("notes")
-      .select("*")
-      .order(sortColumn, { ascending: false })
-      .limit(30);
-    if (courseIds) query = query.in("course_id", courseIds);
-    if (sp.q) query = query.ilike("title", `%${sp.q}%`);
-
-    const { data } = await query;
+    let data: Record<string, unknown>[] | null = null;
+    if (sp.q?.trim()) {
+      // Türkçe dostu arama (harf katlama + ek toleransı, başlık/açıklama/ders adı)
+      const { data: hits } = await supabase.rpc("search_note_ids", { q: sp.q, dep: sp.dep || null, lim: 60 });
+      const ids = ((hits ?? []) as { id: string }[]).map((h) => h.id);
+      data = ids.length
+        ? (await supabase.from("notes").select("*").in("id", ids).order(sortColumn, { ascending: false }).limit(30)).data
+        : [];
+    } else if (sp.dep) {
+      const { data: courses } = await supabase.from("courses").select("id").eq("department_id", sp.dep);
+      const courseIds = (courses ?? []).map((c) => c.id);
+      data = courseIds.length
+        ? (await supabase.from("notes").select("*").in("course_id", courseIds).order(sortColumn, { ascending: false }).limit(30)).data
+        : [];
+    }
     notes = (data ?? []).map(mapNoteRow);
   }
 
