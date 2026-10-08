@@ -6,7 +6,8 @@
 import { PDFDocument } from "pdf-lib";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const OCR_MODEL = "gemini-2.5-flash";
+// Sırayla denenir: yoğunluk (503) / kota (429) olursa bekleyip tekrar dener, sonra yedek modele geçer
+const OCR_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"];
 const MAX_BATCH_BYTES = 8 * 1024 * 1024; // her parça ~8MB (base64 şişmesine pay)
 const MAX_OCR_PAGES = 250; // maliyet/süre sınırı: en fazla bu kadar sayfa OCR'lanır
 
@@ -70,12 +71,26 @@ const PROMPTS = {
 
 async function ocrBatch(apiKey: string, bytes: Uint8Array, mode: keyof typeof PROMPTS = "scan"): Promise<string> {
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: OCR_MODEL });
-  const result = await model.generateContent([
+  const parts = [
     { inlineData: { mimeType: "application/pdf", data: Buffer.from(bytes).toString("base64") } },
     { text: PROMPTS[mode] },
-  ]);
-  return result.response.text() ?? "";
+  ];
+  let lastErr: unknown;
+  for (const name of OCR_MODELS) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const result = await genAI.getGenerativeModel({ model: name }).generateContent(parts);
+        return result.response.text() ?? "";
+      } catch (err) {
+        lastErr = err;
+        const msg = String(err);
+        const transient = /(429|500|503)|overloaded|high demand|RESOURCE_EXHAUSTED/i.test(msg);
+        if (!transient) break; // geçici değilse bu modelde ısrar etme
+        await new Promise((r) => setTimeout(r, 1500 * 2 ** attempt));
+      }
+    }
+  }
+  throw lastErr;
 }
 
 /**
@@ -91,8 +106,9 @@ export async function ocrPdf(buffer: Buffer, mode: keyof typeof PROMPTS = "scan"
     try {
       const t = await ocrBatch(apiKey, b, mode);
       if (t.trim()) texts.push(t.trim());
-    } catch {
-      // bir parça başarısız olsa diğerlerine devam
+    } catch (err) {
+      // bir parça başarısız olsa diğerlerine devam (log: sessiz kalite kaybını fark edebilmek için)
+      console.error("OCR parçası başarısız:", String(err).slice(0, 200));
     }
   }
   return texts.join("\n\n").trim();
