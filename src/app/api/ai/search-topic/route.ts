@@ -44,7 +44,10 @@ export async function POST(request: NextRequest) {
   for (const m of (matches ?? []) as { note_id: string; similarity: number }[]) {
     if (!best.has(m.note_id)) best.set(m.note_id, m.similarity);
   }
-  const noteIds = [...best.keys()].slice(0, 8);
+  // Alakasız kuyruğu kes: en iyi sonuca göre göreli eşik + mutlak taban
+  const top = Math.max(0, ...best.values());
+  const cutoff = Math.max(0.6, top - 0.08);
+  const noteIds = [...best.entries()].filter(([, s]) => s >= cutoff).map(([id]) => id).slice(0, 8);
   if (noteIds.length === 0) return NextResponse.json({ results: [] });
 
   const { data: notes } = await admin
