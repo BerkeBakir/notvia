@@ -47,7 +47,7 @@ export async function signUpWithEmail(formData: FormData) {
   if (!formData.get("terms") || !formData.get("age"))
     redirect(back("kaydol", "error", "Devam etmek için iki onayı da işaretlemelisin."));
 
-  const { error } = await implicitClient().auth.signUp({
+  const { data, error } = await implicitClient().auth.signUp({
     email,
     password,
     options: {
@@ -56,6 +56,10 @@ export async function signUpWithEmail(formData: FormData) {
     },
   });
   if (error) redirect(back("kaydol", "error", trError(error.message)));
+  // Supabase, zaten onaylı bir e-postada hata vermeden boş kimlikle döner (hesap varlığını sızdırmamak için)
+  if (data.user && (data.user.identities?.length ?? 0) === 0) {
+    redirect(back("giris", "error", "Bu e-posta zaten kayıtlı. Giriş yap ya da şifreni sıfırla."));
+  }
 
   redirect(`/login?mode=onay&email=${encodeURIComponent(email)}`);
 }
@@ -84,4 +88,14 @@ export async function signInWithEmail(formData: FormData) {
     redirect(back(extra ? "onay" : "giris", "error", trError(error.message), extra));
   }
   redirect("/notes");
+}
+
+export async function requestPasswordReset(formData: FormData) {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!email) redirect(back("sifre", "error", "E-posta adresini yaz."));
+  await implicitClient().auth.resetPasswordForEmail(email, {
+    redirectTo: `${await siteOrigin()}/auth/confirm`,
+  });
+  // Hesap var/yok bilgisini sızdırmamak için her durumda aynı mesaj
+  redirect(back("sifre", "message", "Bu e-postayla bir hesap varsa şifre sıfırlama linki gönderdik."));
 }

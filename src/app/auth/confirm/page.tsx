@@ -57,9 +57,16 @@ export default function ConfirmPage() {
       }
     }
 
+    const isRecovery = (hash.get("type") ?? query.get("type")) === "recovery";
+
     run()
       .then(() => {
         setState("ok");
+        if (isRecovery) {
+          window.history.replaceState(null, "", "/auth/confirm");
+          window.location.replace("/auth/yeni-sifre");
+          return;
+        }
         // Linkteki jetonları adres çubuğundan temizle, profile geç
         window.history.replaceState(null, "", "/auth/confirm");
         setTimeout(() => window.location.replace("/profile/edit?next=/notes"), 900);

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EnvelopeSimpleOpen } from "@phosphor-icons/react/dist/ssr";
-import { resendConfirmation, signInWithEmail } from "@/lib/actions/auth";
+import { requestPasswordReset, resendConfirmation, signInWithEmail } from "@/lib/actions/auth";
 import { GoogleButton } from "@/components/auth/GoogleButton";
 import { SignupForm } from "@/components/auth/SignupForm";
 import { getCurrentUser } from "@/lib/supabase/auth";
@@ -18,7 +18,8 @@ export default async function LoginPage({
   // Zaten girişliyse giriş ekranı gösterme
   if (await getCurrentUser()) redirect("/notes");
 
-  const mode = sp.mode === "kaydol" ? "kaydol" : sp.mode === "onay" ? "onay" : "giris";
+  const mode =
+    sp.mode === "kaydol" ? "kaydol" : sp.mode === "onay" ? "onay" : sp.mode === "sifre" ? "sifre" : "giris";
   const email = (sp.email ?? "").slice(0, 200);
 
   return (
@@ -37,7 +38,24 @@ export default async function LoginPage({
           <p className="mt-6 rounded-xl border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-primary">{sp.message}</p>
         )}
 
-        {mode === "onay" ? (
+        {mode === "sifre" ? (
+          <div className="mt-6 rounded-2xl border border-border bg-card p-6">
+            <h1 className="font-heading text-xl font-bold text-foreground">Şifreni sıfırla</h1>
+            <p className="mt-1 text-sm text-muted">E-postanı yaz, şifre yenileme linki gönderelim.</p>
+            <form action={requestPasswordReset} className="mt-4 space-y-3">
+              <input name="email" type="email" required autoComplete="email" placeholder="E-posta" className={input} />
+              <button
+                type="submit"
+                className="w-full rounded-xl bg-primary px-4 py-3 font-medium text-primary-foreground transition hover:opacity-90"
+              >
+                Link gönder
+              </button>
+            </form>
+            <Link href="/login" className="mt-4 inline-block text-sm text-primary hover:underline">
+              Giriş ekranına dön
+            </Link>
+          </div>
+        ) : mode === "onay" ? (
           <div className="mt-6 rounded-2xl border border-border bg-card p-6 text-center">
             <EnvelopeSimpleOpen size={44} weight="duotone" className="mx-auto text-primary" />
             <h1 className="mt-3 font-heading text-xl font-bold text-foreground">E-postanı onayla</h1>
@@ -112,6 +130,11 @@ export default async function LoginPage({
                   placeholder="Şifre"
                   className={input}
                 />
+                <div className="text-right">
+                  <Link href="/login?mode=sifre" className="text-xs text-muted hover:text-primary">
+                    Şifremi unuttum
+                  </Link>
+                </div>
                 <button
                   type="submit"
                   className="w-full rounded-xl bg-primary px-4 py-3 font-medium text-primary-foreground transition hover:opacity-90"
