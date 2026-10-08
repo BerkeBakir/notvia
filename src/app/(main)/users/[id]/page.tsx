@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DownloadSimple, ThumbsUp } from "@phosphor-icons/react/dist/ssr";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -146,7 +147,10 @@ export default async function PublicProfilePage({
                   className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 hover:border-primary/50"
                 >
                   <span className="text-foreground">{n.title}</span>
-                  <span className="text-xs text-muted">♥ {n.likes} · ↓ {n.downloads}</span>
+                  <span className="flex shrink-0 items-center gap-3 text-xs text-muted">
+                    <span className="inline-flex items-center gap-1"><ThumbsUp size={13} /> {n.likes}</span>
+                    <span className="inline-flex items-center gap-1"><DownloadSimple size={13} /> {n.downloads}</span>
+                  </span>
                 </Link>
               </li>
             ))}
