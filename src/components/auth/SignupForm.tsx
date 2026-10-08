@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { cleanReferralCode, storedReferralCode } from "@/lib/referralCode";
 import { useFormStatus } from "react-dom";
 import { CheckCircle, Circle, Eye, EyeSlash } from "@phosphor-icons/react";
 import { signUpWithEmail } from "@/lib/actions/auth";
@@ -28,6 +29,12 @@ export function SignupForm() {
   const [show, setShow] = useState(false);
   const [terms, setTerms] = useState(false);
   const [age, setAge] = useState(false);
+  const [refCode, setRefCode] = useState("");
+
+  // Davet linkinden gelindiyse kod kendiliğinden dolsun
+  useEffect(() => {
+    setRefCode(storedReferralCode());
+  }, []);
 
   const ok = passwordOk(pw);
   const match = pw2.length > 0 && pw === pw2;
@@ -87,6 +94,15 @@ export function SignupForm() {
           </p>
         )}
       </div>
+
+      <input
+        name="ref_code"
+        value={refCode}
+        onChange={(e) => setRefCode(cleanReferralCode(e.target.value))}
+        autoComplete="off"
+        placeholder="Davet kodu (opsiyonel, ör. 5164375E)"
+        className={`${input} font-mono tracking-wider`}
+      />
 
       <label className="flex cursor-pointer items-start gap-2 text-xs text-muted">
         <input

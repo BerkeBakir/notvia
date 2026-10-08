@@ -39,6 +39,7 @@ export async function signUpWithEmail(formData: FormData) {
   const password = String(formData.get("password") ?? "");
   const password2 = String(formData.get("password2") ?? "");
   const name = String(formData.get("name") ?? "").trim().slice(0, 80);
+  const refCode = String(formData.get("ref_code") ?? "").replace(/[^0-9a-fA-F]/g, "").slice(0, 8).toUpperCase();
 
   if (!email || !password) redirect(back("kaydol", "error", "E-posta ve şifre gerekli."));
   if (!passwordOk(password))
@@ -51,7 +52,7 @@ export async function signUpWithEmail(formData: FormData) {
     email,
     password,
     options: {
-      data: { full_name: name || email.split("@")[0] },
+      data: { full_name: name || email.split("@")[0], ...(refCode.length === 8 ? { ref_code: refCode } : {}) },
       emailRedirectTo: `${await siteOrigin()}/auth/confirm`,
     },
   });

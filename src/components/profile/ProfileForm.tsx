@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { safeNext } from "@/lib/safeNext";
+import { cleanReferralCode, storedReferralCode } from "@/lib/referralCode";
 import { Combobox } from "@/components/ui/Combobox";
 import { Buildings, GraduationCap } from "@phosphor-icons/react";
 import { createClient } from "@/lib/supabase/client";
@@ -65,6 +66,10 @@ export function ProfileForm({
   const [classYear, setClassYear] = useState(initial.classYear ?? "");
   const [acceptTerms, setAcceptTerms] = useState(initial.termsAccepted);
   const [acceptAge, setAcceptAge] = useState(initial.termsAccepted);
+  const [refCode, setRefCode] = useState("");
+  useEffect(() => {
+    if (!initial.termsAccepted) setRefCode(storedReferralCode());
+  }, [initial.termsAccepted]);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -156,6 +161,13 @@ export function ProfileForm({
         })
         .eq("id", userId);
       if (upErr) throw new Error(upErr.message);
+
+      // İlk profil tamamlamada davet kodu (Google ile kaydolanlar için); hata kaydı engellemez
+      if (!initial.termsAccepted && refCode.length === 8) {
+        const { data: r } = await supabase.rpc("apply_referral_code", { code: refCode });
+        if (r === "not_found") throw new Error("Davet kodu bulunamadı. Kontrol et ya da boş bırak.");
+        localStorage.removeItem("notvia_ref");
+      }
 
       router.push(safeNext(next));
       router.refresh();
@@ -273,6 +285,16 @@ export function ProfileForm({
           ))}
         </div>
       </div>
+
+      {!initial.termsAccepted && (
+        <input
+          value={refCode}
+          onChange={(e) => setRefCode(cleanReferralCode(e.target.value))}
+          autoComplete="off"
+          placeholder="Davet kodu (opsiyonel, ör. 5164375E)"
+          className={`${inputClass} font-mono tracking-wider`}
+        />
+      )}
 
       {!initial.termsAccepted && (
         <div className="space-y-3 rounded-lg border border-border bg-card p-4 text-sm text-foreground">
