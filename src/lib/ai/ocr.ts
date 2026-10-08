@@ -56,8 +56,10 @@ function range(a: number, b: number): number[] {
 /** Bir PDF parçasını Gemini'ye okutup düz metnini döndürür. */
 const PROMPTS = {
   scan:
-    "Bu PDF taranmış ders notu sayfaları içeriyor. İçindeki TÜM metni olduğu gibi, " +
-    "düz metin olarak çıkar (transkribe et). Yorum ekleme, sadece metni ver.",
+    "Bu PDF taranmış ya da metni çok az olan ders notu sayfaları içeriyor. Önce içindeki TÜM metni olduğu gibi " +
+    "düz metin olarak çıkar (transkribe et). Ardından sayfalardaki şekil, grafik, tablo ve şemaların taşıdığı " +
+    "bilgiyi Türkçe açıkla (tablo değerleri, grafik eksen/eğilim, şemadaki ilişkiler); her açıklamanın başına " +
+    "'Sayfa N (görsel):' yaz. Yorum ekleme, uydurma; sadece sayfada olanı ver.",
   visual:
     "Bu PDF ders slaytları. Slaytların yazılı metni zaten ayrıca çıkarıldı; senden SADECE görsel içeriği " +
     "istiyorum. Her sayfadaki şekil, grafik, tablo, şema, diyagram, formül görseli ve resimlerin taşıdığı " +
