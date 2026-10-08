@@ -32,39 +32,41 @@ export async function Header() {
           Notvia
         </Link>
 
-        <nav className="flex items-center gap-2 sm:gap-4 text-sm">
+        <nav className="flex items-center gap-2 whitespace-nowrap text-sm sm:gap-3">
           <Link
             href="/notes"
-            className="hidden px-2 text-muted hover:text-foreground sm:block"
+            className="hidden px-2 text-muted hover:text-foreground lg:block"
           >
             Keşfet
           </Link>
           <Link
             href="/asistan"
-            className="hidden px-2 text-muted hover:text-foreground sm:block"
+            className="hidden px-2 text-muted hover:text-foreground lg:block"
           >
             Asistan
           </Link>
           <Link
             href="/search"
-            className="hidden px-2 text-muted hover:text-foreground sm:block"
+            className="hidden px-2 text-muted hover:text-foreground lg:block"
           >
             Ara
           </Link>
           <Link
             href="/notes/upload"
-            className="hidden px-2 text-muted hover:text-foreground sm:block"
+            className="hidden px-2 text-muted hover:text-foreground lg:block"
           >
             Not Yükle
           </Link>
           <Link
             href="/premium"
-            className="hidden px-2 font-medium text-primary hover:opacity-80 sm:block"
+            className="hidden px-2 font-medium text-primary hover:opacity-80 lg:block"
           >
             ⭐ Premium
           </Link>
 
-          <ThemeToggle />
+          <div className="hidden sm:block">
+            <ThemeToggle />
+          </div>
 
           {user ? (
             <div className="flex items-center gap-3">
@@ -72,7 +74,7 @@ export async function Header() {
               {isModerator(user) && (
                 <Link
                   href="/admin"
-                  className="hidden px-2 text-muted hover:text-primary sm:block"
+                  className="hidden px-2 text-muted hover:text-primary xl:block"
                   title="Moderasyon"
                 >
                   🛡️
@@ -80,14 +82,14 @@ export async function Header() {
               )}
               <Link
                 href="/profile"
-                className="hidden text-foreground hover:text-primary sm:block"
+                className="hidden max-w-[10rem] truncate text-foreground hover:text-primary xl:block"
               >
                 {user.name}
               </Link>
               <form
                 action="/api/auth/signout"
                 method="post"
-                className="hidden sm:block"
+                className="hidden xl:block"
               >
                 <button
                   type="submit"

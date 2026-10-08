@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createPortal } from "react-dom";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
   BookmarkSimple,
   Books,
@@ -176,6 +177,10 @@ export function MobileMenu({
             </div>
 
             <div className="shrink-0 space-y-3 border-t border-border p-4">
+              <div className="flex items-center justify-between sm:hidden">
+                <span className="text-xs text-muted">Tema</span>
+                <ThemeToggle />
+              </div>
               {isLoggedIn ? (
                 <form action="/api/auth/signout" method="post">
                   <button
