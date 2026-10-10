@@ -11,14 +11,17 @@ const KIND_LABEL: Record<(typeof KINDS)[number], string> = {
   diger: "Diğer",
 };
 
-// Basit, örnek başına IP sınırı (serverless'ta en iyi çaba; asıl sınır DB sayımı)
+// Saatlik sınırlar: giriş yapmış kullanıcı kimliğiyle sayılır (DB), misafir IP ile (örnek başına, en iyi çaba).
+// Giriş yapmış kullanıcıya geniş sınır: aktif test edenler kısa sürede çok öneri gönderebiliyor.
+const USER_HOURLY_LIMIT = 30;
+const GUEST_HOURLY_LIMIT = 5;
 const hits = new Map<string, number[]>();
 function ipLimited(ip: string) {
   const now = Date.now();
   const arr = (hits.get(ip) ?? []).filter((t) => now - t < 60 * 60 * 1000);
   arr.push(now);
   hits.set(ip, arr);
-  return arr.length > 5;
+  return arr.length > GUEST_HOURLY_LIMIT;
 }
 
 function esc(s: string) {
@@ -50,24 +53,30 @@ export async function POST(req: NextRequest) {
   if (message.length < 3) return NextResponse.json({ error: "Biraz daha detay yazar mısın?" }, { status: 400 });
   if (message.length > 2000) return NextResponse.json({ error: "Mesaj en fazla 2000 karakter olabilir." }, { status: 400 });
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "?";
-  if (ipLimited(ip)) {
-    return NextResponse.json({ error: "Çok fazla mesaj gönderdin, biraz sonra tekrar dene." }, { status: 429 });
-  }
-
   const admin = createAdminClient();
   if (!admin) return NextResponse.json({ error: "Sunucu yapılandırılmamış." }, { status: 500 });
 
   const user = await getCurrentUser();
-  if (user) {
+  if (!user) {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "?";
+    if (ipLimited(ip)) {
+      return NextResponse.json(
+        { error: "Çok fazla mesaj gönderdin. Giriş yaparak devam edebilir ya da biraz sonra tekrar deneyebilirsin." },
+        { status: 429 },
+      );
+    }
+  } else {
     const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { count } = await admin
       .from("feedback")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .gte("created_at", since);
-    if ((count ?? 0) >= 5) {
-      return NextResponse.json({ error: "Çok fazla mesaj gönderdin, biraz sonra tekrar dene." }, { status: 429 });
+    if ((count ?? 0) >= USER_HOURLY_LIMIT) {
+      return NextResponse.json(
+        { error: "Bir saatte çok fazla mesaj gönderdin, biraz sonra tekrar dene. Önerilerin için teşekkürler!" },
+        { status: 429 },
+      );
     }
   }
 
