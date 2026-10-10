@@ -120,7 +120,7 @@ export function VoteButtons({
         >
           <Star size={16} weight="fill" className="text-accent" />
           <span className="font-medium tabular-nums text-foreground">{rating.toFixed(1)}</span>
-          <span className="text-muted">/ 5</span>
+          <span className="text-muted">/ 5 · {likes + dislikes} oy</span>
         </span>
       )}
     </div>

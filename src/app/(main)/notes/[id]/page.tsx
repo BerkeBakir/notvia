@@ -10,6 +10,8 @@ import { FavoriteButton } from "@/components/notes/FavoriteButton";
 import { ShareToFriend } from "@/components/friends/ShareToFriend";
 import { ReportButton } from "@/components/notes/ReportButton";
 import { DeleteNoteButton } from "@/components/notes/DeleteNoteButton";
+import { QuickFeedback } from "@/components/notes/QuickFeedback";
+import { CommunityBadge } from "@/components/notes/CommunityBadge";
 import { AiSummary } from "@/components/notes/AiSummary";
 import { AiTools } from "@/components/notes/AiTools";
 import { NoteCard } from "@/components/notes/NoteCard";
@@ -71,6 +73,7 @@ export default async function NoteDetailPage({
     { data: commentRows },
     { data: relatedRows },
     votes,
+    { data: feedbackRows },
   ] = await Promise.all([
     note.course_id
       ? supabase.from("courses").select("id,name").eq("id", note.course_id).single()
@@ -90,6 +93,7 @@ export default async function NoteDetailPage({
           .select("*")
           .eq("course_id", note.course_id)
           .neq("id", note.id)
+          .order("quality_score", { ascending: false })
           .order("likes", { ascending: false })
           .limit(3)
       : Promise.resolve({ data: [] }),
@@ -100,6 +104,7 @@ export default async function NoteDetailPage({
           supabase.from("saves").select("id").eq("user_id", user.id).eq("note_id", id).maybeSingle(),
         ])
       : Promise.resolve(null),
+    supabase.from("note_feedback").select("tag,user_id").eq("note_id", id),
   ]);
 
   // Dalga 3: etiketler + yorum yazarları (önceki sonuçlara bağlı) paralel
@@ -129,6 +134,10 @@ export default async function NoteDetailPage({
 
   const relatedNotes = (relatedRows ?? []).map(mapNoteRow);
 
+  const feedbackCounts: Record<string, number> = {};
+  for (const f of feedbackRows ?? []) feedbackCounts[f.tag] = (feedbackCounts[f.tag] ?? 0) + 1;
+  const myFeedback = user ? (feedbackRows ?? []).filter((f) => f.user_id === user.id).map((f) => f.tag) : [];
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <nav className="text-sm text-muted">
@@ -154,7 +163,8 @@ export default async function NoteDetailPage({
           }
         >
           {note.type === "exam" ? "Sınav Sorusu" : "Ders Notu"}
-        </span>
+        </span>{" "}
+        <CommunityBadge likes={note.likes} dislikes={note.dislikes ?? 0} />
         {note.hidden_at && (
           <p className="mt-3 rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-400">
             Bu not birden fazla şikayet aldığı için incelemede. İnceleme bitene kadar yalnızca sen görüyorsun.
@@ -216,6 +226,15 @@ export default async function NoteDetailPage({
           />
           <ShareToFriend userId={user?.id ?? null} noteId={note.id} />
         </div>
+
+        {user ? (
+          <QuickFeedback
+            noteId={note.id}
+            counts={feedbackCounts}
+            mine={myFeedback}
+            isOwner={user.id === note.user_id}
+          />
+        ) : null}
 
         <a
           href={note.file_url}

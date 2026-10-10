@@ -54,3 +54,22 @@ export async function toggleSave(noteId: string) {
   await toggle("saves", noteId, uid, supabase);
   revalidatePath(`/notes/${noteId}`);
 }
+
+const FEEDBACK_TAGS = ["okunaksiz", "eksik", "cok_iyi"] as const;
+
+/** Tek tıkla kısa geri bildirim (okunaksız / eksik / çok iyi): tekrar tıklayınca geri alınır. */
+export async function toggleFeedback(noteId: string, tag: string) {
+  if (!(FEEDBACK_TAGS as readonly string[]).includes(tag)) return;
+  const { supabase, uid } = await ctx(noteId);
+  if (await isOwner(supabase, noteId, uid)) return;
+  const { data: row } = await supabase
+    .from("note_feedback")
+    .select("tag")
+    .eq("note_id", noteId)
+    .eq("user_id", uid)
+    .eq("tag", tag)
+    .maybeSingle();
+  if (row) await supabase.from("note_feedback").delete().eq("note_id", noteId).eq("user_id", uid).eq("tag", tag);
+  else await supabase.from("note_feedback").insert({ note_id: noteId, user_id: uid, tag });
+  revalidatePath(`/notes/${noteId}`);
+}

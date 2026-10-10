@@ -42,6 +42,7 @@ export default async function DepartmentPage({
         .from("notes")
         .select("*")
         .in("course_id", courseIds)
+        .order("quality_score", { ascending: false })
         .order("likes", { ascending: false })
         .limit(9)
     : { data: [] };

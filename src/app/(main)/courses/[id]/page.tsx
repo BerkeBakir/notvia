@@ -10,6 +10,7 @@ import { NotificationToggle } from "@/components/notes/NotificationToggle";
 import { VerifyButton } from "@/components/notes/VerifyButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CourseStudy, type StudySource, type StudioOutputRow } from "@/components/study/CourseStudy";
+import { wilsonScore } from "@/lib/rating";
 
 export async function generateMetadata({
   params,
@@ -104,7 +105,7 @@ export default async function CoursePage({
 
   const notes = (noteRows ?? [])
     .map(mapNoteRow)
-    .sort((a, b) => b.likes - a.likes);
+    .sort((a, b) => wilsonScore(b.likes, b.dislikes) - wilsonScore(a.likes, a.dislikes) || b.likes - a.likes);
 
   let subscribed = false;
   const likedNoteIds = new Set<string>();

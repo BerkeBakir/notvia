@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { matchScore, norm } from "./textMatch";
 import { passwordOk, PASSWORD_RULES } from "./passwordRules";
-import { computeRating, ratingStars } from "./rating";
+import { computeRating, isCommunityApproved, ratingStars, wilsonScore } from "./rating";
 import { cleanReferralCode, referralCode } from "./referralCode";
 import { safeNext } from "./safeNext";
 import { esc } from "./email/escape";
@@ -100,5 +100,34 @@ describe("departmentOptions", () => {
     expect(opts.find((o) => o.value === "d1")).toBeTruthy();
     expect(opts.filter((o) => o.label.toLocaleLowerCase("tr") === "bilgisayar mühendisliği")).toHaveLength(1);
     expect(opts.some((o) => o.value.startsWith(CATALOG_PREFIX))).toBe(true);
+  });
+});
+
+describe("wilsonScore (adil sıralama)", () => {
+  it("1 beğenili not, 40 beğenili notun önüne geçemez", () => {
+    expect(wilsonScore(1, 0)).toBeLessThan(wilsonScore(40, 2));
+    expect(computeRating(1, 0)).toBeGreaterThan(computeRating(40, 2)!); // eski yıldız oranı tersini söylüyordu
+  });
+
+  it("bilinen değerler, oy yoksa 0, 0-1 aralığında", () => {
+    expect(wilsonScore(0, 0)).toBe(0);
+    expect(wilsonScore(1, 0)).toBeCloseTo(0.207, 3);
+    expect(wilsonScore(40, 2)).toBeCloseTo(0.842, 3);
+    expect(wilsonScore(0, 10)).toBeGreaterThanOrEqual(0);
+    expect(wilsonScore(1000, 0)).toBeLessThan(1);
+  });
+
+  it("aynı oranda daha çok oy daha yüksek puan", () => {
+    expect(wilsonScore(10, 2)).toBeGreaterThan(wilsonScore(5, 1));
+  });
+});
+
+describe("isCommunityApproved", () => {
+  it("en az 5 beğeni ve net çoğunluk gerekir", () => {
+    expect(isCommunityApproved(4, 0)).toBe(false);
+    expect(isCommunityApproved(5, 0)).toBe(true);
+    expect(isCommunityApproved(6, 1)).toBe(false);
+    expect(isCommunityApproved(40, 2)).toBe(true);
+    expect(isCommunityApproved(20, 15)).toBe(false);
   });
 });
