@@ -52,7 +52,7 @@ export default async function ProfilePage({
   const [
     { data: myNotes },
     { count: coursesAdded },
-    { count: referralsMade },
+    { data: referralRows },
     { data: saveRows },
     { data: me },
     { count: commentsCount },
@@ -69,7 +69,11 @@ export default async function ProfilePage({
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
     supabase.from("courses").select("id", { count: "exact", head: true }).eq("created_by", user.id),
-    supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", user.id),
+    supabase
+      .from("referrals")
+      .select("referred_id,created_at")
+      .eq("referrer_id", user.id)
+      .order("created_at", { ascending: false }),
     supabase.from("saves").select("note_id").eq("user_id", user.id),
     supabase.from("users").select("streak_count,created_at").eq("id", user.id).maybeSingle(),
     supabase.from("comments").select("id", { count: "exact", head: true }).eq("user_id", user.id),
@@ -85,13 +89,20 @@ export default async function ProfilePage({
     checkReferralReward(),
   ]);
 
+  // Davet koduyla katılanlar (adlarıyla)
+  const referrals = referralRows ?? [];
+  const { data: invitedUsers } = referrals.length
+    ? await supabase.from("users").select("id,name").in("id", referrals.map((r) => r.referred_id))
+    : { data: [] as { id: string; name: string }[] };
+  const invitedName = new Map((invitedUsers ?? []).map((u) => [u.id, u.name as string]));
+
   const notes = myNotes ?? [];
   const stats = {
     notesCount: notes.length,
     likesReceived: notes.reduce((s, n) => s + (n.likes ?? 0), 0),
     downloadsReceived: notes.reduce((s, n) => s + (n.downloads ?? 0), 0),
     coursesAdded: coursesAdded ?? 0,
-    referralsMade: referralsMade ?? 0,
+    referralsMade: referrals.length,
     requestsFulfilled: requestsFulfilled ?? 0,
     questPoints: (questRows ?? []).reduce((a, r) => a + (r.points ?? 0), 0),
   };
@@ -304,6 +315,28 @@ export default async function ProfilePage({
         </div>
         <div className="mt-4">
           <InviteLink userId={user.id} />
+        </div>
+
+        <div className="mt-5 border-t border-border pt-4">
+          <h3 className="text-sm font-medium text-foreground">Davetinle katılanlar ({referrals.length})</h3>
+          {referrals.length === 0 ? (
+            <p className="mt-1 text-sm text-muted">
+              Henüz kimse davet kodunla katılmadı. Linki ya da kodu sınıf gruplarında paylaş.
+            </p>
+          ) : (
+            <ul className="mt-2 divide-y divide-border">
+              {referrals.map((r) => (
+                <li key={r.referred_id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                  <Link href={`/users/${r.referred_id}`} className="truncate text-foreground hover:text-primary">
+                    {invitedName.get(r.referred_id) ?? "Kullanıcı"}
+                  </Link>
+                  <span className="shrink-0 text-xs text-muted">
+                    {new Date(r.created_at).toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul" })}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </section>
 
