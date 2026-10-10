@@ -9,6 +9,7 @@ import { DownloadButton } from "@/components/notes/DownloadButton";
 import { FavoriteButton } from "@/components/notes/FavoriteButton";
 import { ShareToFriend } from "@/components/friends/ShareToFriend";
 import { ReportButton } from "@/components/notes/ReportButton";
+import { DeleteNoteButton } from "@/components/notes/DeleteNoteButton";
 import { AiSummary } from "@/components/notes/AiSummary";
 import { AiTools } from "@/components/notes/AiTools";
 import { NoteCard } from "@/components/notes/NoteCard";
@@ -223,7 +224,11 @@ export default async function NoteDetailPage({
         <AiSummary noteId={note.id} isPro={user?.plan === "pro"} title={note.title} />
 
         <div className="mt-4 border-t border-border pt-3">
-          <ReportButton noteId={note.id} userId={user?.id ?? null} />
+          {user && user.id === note.user_id ? (
+            <DeleteNoteButton noteId={note.id} />
+          ) : (
+            <ReportButton noteId={note.id} userId={user?.id ?? null} />
+          )}
         </div>
       </div>
 

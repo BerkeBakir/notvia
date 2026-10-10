@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getCurrentUser, isModerator } from "@/lib/supabase/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { removeNote } from "@/lib/notes/remove";
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
@@ -16,9 +17,15 @@ export async function POST(request: NextRequest) {
   const { action, noteId, reportId, feedbackId, status } = await request.json().catch(() => ({}));
 
   if (action === "deleteNote" && noteId) {
-    // Notu sil (ilişkili şikayet/yorum/beğeni FK ile temizlenir)
-    const { error } = await admin.from("notes").delete().eq("id", noteId);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    // Notu ve PDF'ini sil (ilişkili şikayet/yorum/beğeni FK ile temizlenir)
+    const { data: note } = await admin
+      .from("notes")
+      .select("id,user_id,course_id,title,file_url")
+      .eq("id", noteId)
+      .maybeSingle();
+    if (!note) return NextResponse.json({ error: "Not bulunamadı." }, { status: 404 });
+    const res = await removeNote(admin, note, { by: "moderator", reason: "moderasyon" });
+    if (!res.ok) return NextResponse.json({ error: res.error }, { status: 500 });
     return NextResponse.json({ ok: true });
   }
 
