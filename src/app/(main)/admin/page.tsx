@@ -43,15 +43,24 @@ export default async function AdminPage() {
 
   const [{ data: notes }, { data: reporters }] = await Promise.all([
     noteIds.length
-      ? admin.from("notes").select("id,title").in("id", noteIds)
-      : Promise.resolve({ data: [] as { id: string; title: string }[] }),
+      ? admin.from("notes").select("id,title,hidden_at").in("id", noteIds)
+      : Promise.resolve({ data: [] as { id: string; title: string; hidden_at: string | null }[] }),
     userIds.length
       ? admin.from("users").select("id,name").in("id", userIds)
       : Promise.resolve({ data: [] as { id: string; name: string }[] }),
   ]);
 
-  const noteTitle = new Map((notes ?? []).map((n) => [n.id, n.title]));
   const reporterName = new Map((reporters ?? []).map((u) => [u.id, u.name]));
+  // Şikayetleri nota göre grupla; gizlenmiş (onay bekleyen) notlar en üstte
+  const groups = (notes ?? [])
+    .map((n) => ({ note: n, reports: reportList.filter((r) => r.note_id === n.id) }))
+    .sort((x, y) => Number(!!y.note.hidden_at) - Number(!!x.note.hidden_at) || y.reports.length - x.reports.length);
+  const topReason = (rs: { reason: string }[]) => {
+    const c = new Map<string, number>();
+    for (const r of rs) c.set(r.reason, (c.get(r.reason) ?? 0) + 1);
+    return [...c.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
+  };
+  const pendingCount = groups.filter((g) => g.note.hidden_at).length;
 
   return (
     <div className="space-y-6">
@@ -60,40 +69,42 @@ export default async function AdminPage() {
           🛡️ Moderasyon Paneli
         </h1>
         <p className="mt-1 text-sm text-muted">
-          Şikayet edilen içerikler. ({reportList.length} açık şikayet)
+          Şikayet edilen notlar: {groups.length} · onay bekleyen (otomatik gizlenen): {pendingCount}. 3 farklı kişi
+          şikayet edince not otomatik gizlenir.
         </p>
       </div>
 
-      {reportList.length === 0 ? (
+      {groups.length === 0 ? (
         <p className="text-muted">Bekleyen şikayet yok. 🎉</p>
       ) : (
         <ul className="space-y-3">
-          {reportList.map((r) => (
+          {groups.map(({ note, reports: rs }) => (
             <li
-              key={r.id}
-              className="rounded-2xl border border-border bg-card p-5"
+              key={note.id}
+              className={`rounded-2xl border bg-card p-5 ${note.hidden_at ? "border-red-500/50" : "border-border"}`}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className="font-medium text-card-foreground">
-                    {r.note_id ? (
-                      <Link
-                        href={`/notes/${r.note_id}`}
-                        className="hover:text-primary"
-                      >
-                        {noteTitle.get(r.note_id) ?? "(silinmiş not)"}
-                      </Link>
-                    ) : (
-                      "(not yok)"
+                    <Link href={`/notes/${note.id}`} className="hover:text-primary">
+                      {note.title}
+                    </Link>
+                    {note.hidden_at && (
+                      <span className="ml-2 rounded-full bg-red-500/15 px-2 py-0.5 text-xs font-medium text-red-400">
+                        Gizlendi · onay bekliyor
+                      </span>
                     )}
                   </p>
-                  <p className="mt-1 text-sm text-red-400">⚑ {r.reason}</p>
-                  <p className="mt-1 text-xs text-muted">
-                    {reporterName.get(r.user_id ?? "") ?? "Anonim"} ·{" "}
-                    {new Date(r.created_at).toLocaleString("tr-TR", { timeZone: "Europe/Istanbul" })}
-                  </p>
+                  <ul className="mt-2 space-y-1">
+                    {rs.map((r) => (
+                      <li key={r.id} className="text-xs text-muted">
+                        <span className="text-red-400">⚑ {r.reason}</span> · {reporterName.get(r.user_id ?? "") ?? "Anonim"} ·{" "}
+                        {new Date(r.created_at).toLocaleString("tr-TR", { timeZone: "Europe/Istanbul" })}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <ModerationActions noteId={r.note_id} reportId={r.id} />
+                <ModerationActions noteId={note.id} hidden={!!note.hidden_at} defaultReason={topReason(rs)} />
               </div>
             </li>
           ))}

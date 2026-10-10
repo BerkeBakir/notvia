@@ -21,18 +21,19 @@ export function ReportButton({
   const router = useRouter();
   const supabase = createClient();
   const [open, setOpen] = useState(false);
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState<"" | "ok" | "again">("");
   const [loading, setLoading] = useState(false);
 
   async function report(reason: string) {
     if (!userId) return router.push("/login");
     setLoading(true);
-    await supabase.from("reports").insert({
+    const { error } = await supabase.from("reports").insert({
       note_id: noteId,
       user_id: userId,
       reason,
     });
-    setDone(true);
+    // 23505: aynı kişi aynı notu daha önce şikayet etmiş
+    setDone(error?.code === "23505" ? "again" : "ok");
     setOpen(false);
     setLoading(false);
   }
@@ -40,7 +41,9 @@ export function ReportButton({
   if (done) {
     return (
       <span className="text-xs text-muted">
-        Şikayetin alındı, teşekkürler.
+        {done === "again"
+          ? "Bu notu zaten şikayet etmiştin; inceleniyor."
+          : "Şikayetin alındı, teşekkürler. İncelendiğinde bildirim alacaksın."}
       </span>
     );
   }

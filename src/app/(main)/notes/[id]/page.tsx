@@ -54,7 +54,7 @@ export default async function NoteDetailPage({
     supabase
       .from("notes")
       .select(
-        "id,title,description,type,file_url,downloads,likes,dislikes,course_id,user_id",
+        "id,title,description,type,file_url,downloads,likes,dislikes,course_id,user_id,hidden_at",
       )
       .eq("id", id)
       .single(),
@@ -155,6 +155,11 @@ export default async function NoteDetailPage({
         >
           {note.type === "exam" ? "Sınav Sorusu" : "Ders Notu"}
         </span>
+        {note.hidden_at && (
+          <p className="mt-3 rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+            Bu not birden fazla şikayet aldığı için incelemede. İnceleme bitene kadar yalnızca sen görüyorsun.
+          </p>
+        )}
         <h1 className="mt-3 font-heading text-2xl font-bold text-card-foreground">
           {note.title}
         </h1>
