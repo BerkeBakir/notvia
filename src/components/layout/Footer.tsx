@@ -20,16 +20,25 @@ export function Footer() {
           </p>
         </div>
 
-        <nav className="flex gap-6 text-sm text-muted">
+        <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted sm:max-w-md sm:justify-end">
+          <Link href="/hakkimizda" className="hover:text-primary">
+            Hakkımızda ve İletişim
+          </Link>
           <Link href="/privacy" className="hover:text-primary">
             Gizlilik
           </Link>
           <Link href="/terms" className="hover:text-primary">
             Şartlar
           </Link>
-          <a href="mailto:info@notvia.app" className="hover:text-primary">
-            İletişim
-          </a>
+          <Link href="/mesafeli-satis" className="hover:text-primary">
+            Mesafeli Satış
+          </Link>
+          <Link href="/on-bilgilendirme" className="hover:text-primary">
+            Ön Bilgilendirme
+          </Link>
+          <Link href="/iade" className="hover:text-primary">
+            İptal ve İade
+          </Link>
         </nav>
       </div>
       <div className="border-t border-border py-4 text-center text-xs text-muted">

@@ -6,7 +6,7 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://notvia.app";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const statics: MetadataRoute.Sitemap = ["", "/notes", "/search", "/leaderboard", "/premium", "/terms", "/privacy"].map(
+  const statics: MetadataRoute.Sitemap = ["", "/notes", "/search", "/leaderboard", "/premium", "/terms", "/privacy", "/hakkimizda", "/mesafeli-satis", "/on-bilgilendirme", "/iade"].map(
     (p) => ({ url: `${SITE}${p}`, changeFrequency: "daily", priority: p === "" ? 1 : 0.7 }),
   );
 
