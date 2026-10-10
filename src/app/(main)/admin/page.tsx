@@ -20,6 +20,18 @@ export default async function AdminPage() {
     .order("created_at", { ascending: false })
     .limit(100);
 
+  const { data: interest } = await admin
+    .from("premium_interest")
+    .select("answer,plan,max_price,wants,updated_at")
+    .order("updated_at", { ascending: false });
+  const interestRows = interest ?? [];
+  const tally = (key: "answer" | "plan" | "max_price") =>
+    interestRows.reduce<Record<string, number>>((acc, r) => {
+      const v = r[key] ?? "—";
+      acc[v] = (acc[v] ?? 0) + 1;
+      return acc;
+    }, {});
+
   const { data: reports } = await admin
     .from("reports")
     .select("id,note_id,user_id,reason,created_at")
@@ -120,6 +132,41 @@ export default async function AdminPage() {
               </li>
             ))}
           </ul>
+        )}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="font-heading text-xl font-semibold text-foreground">
+          💳 Premium ilgi anketi ({interestRows.length} cevap)
+        </h2>
+        {interestRows.length === 0 ? (
+          <p className="text-muted">Henüz cevap yok.</p>
+        ) : (
+          <div className="space-y-3 rounded-2xl border border-border bg-card p-5 text-sm">
+            {(
+              [
+                ["Alır mıydın", "answer"],
+                ["Plan", "plan"],
+                ["Aylık bütçe (₺)", "max_price"],
+              ] as const
+            ).map(([label, key]) => (
+              <p key={key} className="text-card-foreground">
+                <span className="text-muted">{label}:</span>{" "}
+                {Object.entries(tally(key))
+                  .map(([k, v]) => `${k} ${v}`)
+                  .join(" · ")}
+              </p>
+            ))}
+            <ul className="space-y-1 border-t border-border pt-3 text-muted">
+              {interestRows
+                .filter((r) => r.wants)
+                .map((r, i) => (
+                  <li key={i}>
+                    <span className="text-foreground">{r.answer}:</span> {r.wants}
+                  </li>
+                ))}
+            </ul>
+          </div>
         )}
       </section>
     </div>

@@ -2,7 +2,7 @@
 
 **A community-driven academic resource and study platform for university students.**
 
-Notvia enables students to upload, organize, discover, and discuss lecture notes and past-exam PDFs by university, department, and course. It combines Supabase-backed authentication, storage, PostgreSQL (with pgvector), and Row-Level Security with Turkish-aware search, ratings, notifications, gamification, and social features. An AI study companion answers questions grounded in the uploaded notes (RAG), with OCR for scanned PDFs and a multi-provider LLM fallback chain. The platform includes 38 database migrations, three membership tiers, PWA support, and Vercel deployment.
+Notvia enables students to upload, organize, discover, and discuss lecture notes and past-exam PDFs by university, department, and course. It combines Supabase-backed authentication, storage, PostgreSQL (with pgvector), and Row-Level Security with Turkish-aware search, ratings, notifications, gamification, and social features. An AI study companion answers questions grounded in the uploaded notes (RAG), with OCR for scanned PDFs and a multi-provider LLM fallback chain. The platform includes 39 database migrations, three membership tiers, PWA support, and Vercel deployment.
 
 🌐 **Live demo:** [notvia.app](https://notvia.app)
 
@@ -41,7 +41,7 @@ Notvia enables students to upload, organize, discover, and discuss lecture notes
 
 ### Account, monetization & platform
 - **Auth** — Google OAuth + email/password with confirmation, password reset, password rules; account settings with KVKK-compliant account deletion
-- **Three tiers** — Free / Premium / Pro (Stripe scaffolded, env-gated — not live yet)
+- **Three tiers** — Free / Premium / Pro; iyzico subscription checkout built but switched off (`PAYMENTS_ENABLED`) — until then `/premium` shows a “would you buy?” survey whose results appear in the admin panel
 - **Ad slots** for free users (Google AdSense-ready)
 - **3 themes** — Light / Dark / custom “Notvia” theme
 - **PWA** — installable on mobile
@@ -58,7 +58,7 @@ Notvia enables students to upload, organize, discover, and discuss lecture notes
 | Backend / DB | [Supabase](https://supabase.com/) — Postgres, Auth (Google OAuth + email), Storage, Row-Level Security |
 | AI | [Google Gemini](https://ai.google.dev/) (chat, embeddings, OCR) + Groq / Cerebras / OpenRouter / Mistral / Anthropic fallback, pgvector RAG |
 | Email | [Brevo](https://www.brevo.com/) transactional API |
-| Payments | [Stripe](https://stripe.com/) (scaffolded, env-gated) |
+| Payments | [iyzico](https://www.iyzico.com/) subscriptions (sandbox-ready, off by default) |
 | Hosting | [Vercel](https://vercel.com/) |
 
 ---
@@ -68,7 +68,7 @@ Notvia enables students to upload, organize, discover, and discuss lecture notes
 ### Prerequisites
 - Node.js 18+
 - A [Supabase](https://supabase.com/) project
-- (Optional) Google Gemini API key (plus optional fallback LLM keys), Brevo account, Stripe & AdSense for full features
+- (Optional) Google Gemini API key (plus optional fallback LLM keys), Brevo account, iyzico (sandbox) & AdSense for full features
 
 ### 1. Clone & install
 ```bash
@@ -100,11 +100,15 @@ BREVO_SENDER_NAME=Notvia
 # Email link base (optional)
 NEXT_PUBLIC_SITE_URL=
 
-# Payments (Stripe) — optional, for going live
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-STRIPE_PRICE_PREMIUM=
-STRIPE_PRICE_PRO=
+# Payments (iyzico subscriptions) — off unless PAYMENTS_ENABLED=true and keys are set
+PAYMENTS_ENABLED=false
+IYZICO_BASE_URL=https://sandbox-api.iyzipay.com
+IYZICO_API_KEY=
+IYZICO_SECRET_KEY=
+IYZICO_PLAN_PREMIUM_MONTHLY=   # pricing plan reference codes from the iyzico panel
+IYZICO_PLAN_PREMIUM_YEARLY=
+IYZICO_PLAN_PRO_MONTHLY=
+IYZICO_PLAN_PRO_YEARLY=
 
 # Ads (Google AdSense) — optional
 NEXT_PUBLIC_ADSENSE_CLIENT=
@@ -114,7 +118,7 @@ CRON_SECRET=
 ```
 
 ### 3. Database
-Run the SQL migrations in `supabase/migrations/` **in order** (`0001` → `0038`) via the Supabase **SQL Editor**. They create the schema, RLS policies, triggers, and storage bucket. Optionally seed Turkish universities with `supabase/seed/universities_tr.sql`.
+Run the SQL migrations in `supabase/migrations/` **in order** (`0001` → `0039`) via the Supabase **SQL Editor**. They create the schema, RLS policies, triggers, and storage bucket. Optionally seed Turkish universities with `supabase/seed/universities_tr.sql`.
 
 ### 4. Run
 ```bash
@@ -158,9 +162,10 @@ src/
     supabase/               # browser/server/admin clients, auth helpers
     ai/                     # RAG, embeddings, OCR, LLM providers, quota
     actions/                # server actions (votes, referral, streak, account)
-    stripe.ts, rating.ts, contribution.ts
+    payments/               # iyzico client, plan config, subscription sync
+    rating.ts, contribution.ts, grades.ts
 supabase/
-  migrations/               # SQL schema, RLS, triggers, RPCs (0001–0038)
+  migrations/               # SQL schema, RLS, triggers, RPCs (0001–0039)
   seed/                     # Turkish universities, sample data
 ```
 
