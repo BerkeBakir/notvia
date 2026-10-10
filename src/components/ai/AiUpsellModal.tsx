@@ -3,8 +3,19 @@
 import Link from "next/link";
 import { Sparkle, X, Check } from "@phosphor-icons/react";
 
-/** Günlük AI limiti dolunca gösterilen Premium/Pro yükseltme penceresi. */
-export function AiUpsellModal({ onClose }: { onClose: () => void }) {
+/**
+ * Premium/Pro yükseltme penceresi (AI hakkı dolunca veya Pro'ya özel bir araca tıklanınca).
+ * Fiyat göstermez: güncel fiyat ya da "yakında" bilgisi /premium sayfasındadır.
+ */
+export function AiUpsellModal({
+  onClose,
+  title = "Günlük soru hakkın doldu",
+  description = "Daha fazla soru sormak için üyeliğini yükselt.",
+}: {
+  onClose: () => void;
+  title?: string;
+  description?: string;
+}) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
@@ -24,29 +35,21 @@ export function AiUpsellModal({ onClose }: { onClose: () => void }) {
         </button>
         <Sparkle size={32} weight="duotone" className="text-primary" />
         <h2 className="mt-3 font-heading text-xl font-bold text-foreground">
-          Günlük soru hakkın doldu
+          {title}
         </h2>
-        <p className="mt-1 text-sm text-muted">
-          Daha fazla soru sormak için üyeliğini yükselt.
-        </p>
+        <p className="mt-1 text-sm text-muted">{description}</p>
 
         <div className="mt-5 space-y-3">
           <div className="rounded-xl border border-border p-4">
-            <div className="flex items-baseline justify-between">
-              <span className="font-heading font-bold text-foreground">Premium</span>
-              <span className="text-sm text-muted">$5 / ay</span>
-            </div>
+            <span className="font-heading font-bold text-foreground">Premium</span>
             <p className="mt-1 flex items-center gap-1.5 text-sm text-muted">
               <Check size={14} weight="bold" className="text-primary" /> Günde 50 AI sorusu + reklamsız
             </p>
           </div>
           <div className="rounded-xl border-2 border-primary p-4">
-            <div className="flex items-baseline justify-between">
-              <span className="font-heading font-bold text-foreground">Pro</span>
-              <span className="text-sm text-muted">$12 / ay</span>
-            </div>
+            <span className="font-heading font-bold text-foreground">Pro</span>
             <p className="mt-1 flex items-center gap-1.5 text-sm text-muted">
-              <Check size={14} weight="bold" className="text-primary" /> Sınırsız AI + tüm AI araçları
+              <Check size={14} weight="bold" className="text-primary" /> Sınırsız AI + AI özet, soru üretici, flashcard
             </p>
           </div>
         </div>
@@ -57,7 +60,6 @@ export function AiUpsellModal({ onClose }: { onClose: () => void }) {
         >
           Planları Gör
         </Link>
-        <p className="mt-2 text-center text-xs text-muted">Yıllık planda 2 ay bedava</p>
       </div>
     </div>
   );

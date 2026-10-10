@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { Check, Copy, Sparkle } from "@phosphor-icons/react";
 import { AiPanel } from "@/components/ai/AiPanel";
+import { AiUpsellModal } from "@/components/ai/AiUpsellModal";
 import { Markdown } from "@/components/ai/Markdown";
 
 export function AiSummary({
@@ -20,15 +20,27 @@ export function AiSummary({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [upsell, setUpsell] = useState(false);
 
+  // Pro olmayan kullanıcı da aynı düğmeyi görür; tıklayınca Pro penceresi açılır
   if (!isPro) {
     return (
-      <Link
-        href="/premium"
-        className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-accent/40 px-3 py-1.5 text-sm font-medium text-accent hover:bg-accent hover:text-primary-foreground"
-      >
-        <Sparkle size={15} weight="duotone" /> AI Özet — Pro&apos;ya yükselt
-      </Link>
+      <>
+        <button
+          type="button"
+          onClick={() => setUpsell(true)}
+          className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-lg border border-accent/40 px-3 py-1.5 text-sm font-medium text-accent hover:bg-accent hover:text-primary-foreground"
+        >
+          <Sparkle size={15} weight="duotone" /> AI Özet
+        </button>
+        {upsell && (
+          <AiUpsellModal
+            onClose={() => setUpsell(false)}
+            title="AI Özet Pro'ya özel"
+            description="Bu notun yapay zekâ özetini görmek için Pro'ya geç."
+          />
+        )}
+      </>
     );
   }
 
