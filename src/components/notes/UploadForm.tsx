@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Combobox } from "@/components/ui/Combobox";
+import { inspectPdf, sha256Hex } from "@/lib/notes/pdfCheck";
 import {
   Books,
   Buildings,
@@ -113,6 +114,9 @@ export function UploadForm({
   const [tags, setTags] = useState<string[]>([]);
   const [tagDraft, setTagDraft] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [fileHash, setFileHash] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [duplicate, setDuplicate] = useState<{ id: string; title: string } | null>(null);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState("");
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
@@ -133,17 +137,48 @@ export function UploadForm({
     setTags([...tags, t]);
   }
 
-  function acceptFile(f: File | null) {
+  async function acceptFile(f: File | null) {
     setError("");
+    setDuplicate(null);
+    setFileHash(null);
     if (!f) return setFile(null);
     const isPdf = f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf");
     if (!isPdf) return setError("Sadece PDF formatında dosya yükleyebilirsin.");
     if (f.size > MAX_SIZE) return setError("Dosya boyutu en fazla 40MB olabilir.");
+
+    // Kalite kontrolü: boş / bozuk / şifreli PDF'i yüklemeden yakala, içerik özetini çıkar
+    setChecking(true);
+    try {
+      const buf = await f.arrayBuffer();
+      const check = await inspectPdf(new Uint8Array(buf));
+      if (!check.ok) {
+        setFile(null);
+        return setError(check.reason);
+      }
+      setFileHash(await sha256Hex(buf));
+    } catch {
+      // Kontrol yapılamazsa yüklemeyi engelleme (eski tarayıcı vb.)
+    } finally {
+      setChecking(false);
+    }
+
     setFile(f);
     // Başlık boşsa dosya adından öner
     if (!title.trim()) {
       setTitle(f.name.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ").trim());
     }
+  }
+
+  /** Aynı dosya bu derse daha önce yüklendi mi? */
+  async function findDuplicate(hash: string, course: string) {
+    const { data } = await supabase
+      .from("notes")
+      .select("id,title")
+      .eq("course_id", course)
+      .eq("file_hash", hash)
+      .limit(1)
+      .maybeSingle();
+    return data;
   }
 
   async function linkTags(noteId: string) {
@@ -162,10 +197,18 @@ export function UploadForm({
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setDuplicate(null);
     if (!courseId) return setError("Lütfen üniversite, bölüm ve ders seç.");
     if (!title.trim()) return setError("Başlık gerekli.");
     if (!file) return setError("Lütfen bir PDF dosyası seç.");
     if (tagDraft.trim()) addTag(tagDraft);
+    if (fileHash) {
+      const dup = await findDuplicate(fileHash, courseId);
+      if (dup) {
+        setDuplicate(dup);
+        return setError("Bu dosya bu derse zaten yüklenmiş.");
+      }
+    }
 
     setPhase({ kind: "uploading", pct: 0, etaSec: null });
     try {
@@ -207,6 +250,7 @@ export function UploadForm({
           title: title.trim(),
           description: description.trim() || null,
           file_url: publicUrl,
+          file_hash: fileHash,
           type,
           course_id: courseId,
         })
@@ -276,8 +320,18 @@ export function UploadForm({
       {error && (
         <p className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {error}
+          {duplicate && (
+            <>
+              {" "}
+              <Link href={`/notes/${duplicate.id}`} className="underline">
+                “{duplicate.title}”
+              </Link>{" "}
+              notuna göz at; farklı bir sürümse dosyayı güncelleyip tekrar dene.
+            </>
+          )}
         </p>
       )}
+      {checking && <p className="text-sm text-muted">PDF kontrol ediliyor…</p>}
 
       {/* 1 — Ders */}
       <section className="space-y-3 rounded-2xl border border-border bg-card/50 p-5">
@@ -467,7 +521,7 @@ export function UploadForm({
 
       <button
         type="submit"
-        disabled={busy}
+        disabled={busy || checking}
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
       >
         <UploadSimple size={18} weight="bold" />
