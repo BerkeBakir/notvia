@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
   const suffix = msg ? ` — "${msg}"` : "";
 
   if (noteId) {
-    const { data: note } = await admin.from("notes").select("id,title").eq("id", noteId).maybeSingle();
+    const { data: note } = await admin.from("notes").select("id,title").eq("id", noteId).is("hidden_at", null).maybeSingle();
     if (!note) return NextResponse.json({ error: "Not bulunamadı." }, { status: 404 });
     await admin.from("notifications").insert({
       user_id: to,

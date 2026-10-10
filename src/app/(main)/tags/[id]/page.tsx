@@ -31,6 +31,7 @@ export default async function TagPage({
         .from("notes")
         .select("*")
         .in("id", noteIds)
+        .order("quality_score", { ascending: false })
         .order("likes", { ascending: false })
     : { data: [] };
   const notes = (noteRows ?? []).map(mapNoteRow);

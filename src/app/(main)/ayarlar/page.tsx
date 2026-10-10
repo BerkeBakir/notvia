@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { EnvelopeSimple, GearSix, GoogleLogo, PencilSimple } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteSection, PasswordSection } from "@/components/account/AccountSettings";
+import { SubscriptionSection } from "@/components/account/SubscriptionSection";
 
 export const metadata = { title: "Hesap ayarları" };
 
@@ -16,6 +17,14 @@ export default async function SettingsPage() {
   const providers = (user.app_metadata?.providers as string[] | undefined) ?? [];
   const hasPassword = providers.includes("email");
   const hasGoogle = providers.includes("google");
+
+  const { data: sub } = await supabase
+    .from("payment_subscriptions")
+    .select("plan,billing")
+    .in("status", ["ACTIVE", "PENDING"])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -54,6 +63,7 @@ export default async function SettingsPage() {
         </Link>
       </section>
 
+      {sub && <SubscriptionSection plan={sub.plan} billing={sub.billing} />}
       <PasswordSection hasPassword={hasPassword} />
       <DeleteSection />
     </div>

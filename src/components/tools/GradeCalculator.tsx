@@ -3,33 +3,7 @@
 import { useMemo, useState } from "react";
 import { Calculator, ChartLine, Plus, Student, Trash } from "@phosphor-icons/react";
 import { Combobox } from "@/components/ui/Combobox";
-
-const LETTERS: [string, number][] = [
-  ["AA", 4],
-  ["BA", 3.5],
-  ["BB", 3],
-  ["CB", 2.5],
-  ["CC", 2],
-  ["DC", 1.5],
-  ["DD", 1],
-  ["FD", 0.5],
-  ["FF", 0],
-];
-
-// Yaygın T-skoru → harf tablosu (sınıf ortalaması "orta" düzeydeyken). Üniversiteden üniversiteye değişir.
-const T_TABLE: [number, string][] = [
-  [59, "AA"],
-  [54, "BA"],
-  [49, "BB"],
-  [44, "CB"],
-  [39, "CC"],
-  [34, "DC"],
-  [29, "DD"],
-  [24, "FD"],
-  [-Infinity, "FF"],
-];
-
-const num = (v: string) => (v.trim() === "" ? NaN : Number(v.replace(",", ".")));
+import { finalNeeded, gpa, LETTERS, relativeGrade } from "@/lib/grades";
 
 const input =
   "w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-primary focus:ring-4 focus:ring-primary/10";
@@ -54,18 +28,7 @@ function FinalNeeded() {
   const [pass, setPass] = useState("50");
   const [finalMin, setFinalMin] = useState("");
 
-  const r = useMemo(() => {
-    const fw = num(finalWeight);
-    const ps = parts.map((p) => ({ w: num(p.weight), s: num(p.score) }));
-    const total = ps.reduce((a, p) => a + (Number.isNaN(p.w) ? 0 : p.w), 0) + (Number.isNaN(fw) ? 0 : fw);
-    if (Number.isNaN(fw) || ps.some((p) => Number.isNaN(p.w) || Number.isNaN(p.s))) return null;
-    const earned = ps.reduce((a, p) => a + (p.w * p.s) / 100, 0);
-    const target = Number.isNaN(num(pass)) ? 50 : num(pass);
-    const need = ((target - earned) / fw) * 100;
-    const fmin = num(finalMin);
-    const needFinal = Math.max(need, Number.isNaN(fmin) ? -Infinity : fmin, 0);
-    return { total, earned, need: needFinal, rawNeed: need, fmin, target, fw };
-  }, [parts, finalWeight, pass, finalMin]);
+  const r = useMemo(() => finalNeeded(parts, finalWeight, pass, finalMin), [parts, finalWeight, pass, finalMin]);
 
   return (
     <div className="space-y-4">
@@ -171,23 +134,7 @@ function BellCurve() {
   const [sd, setSd] = useState("15");
   const [score, setScore] = useState("70");
 
-  const r = useMemo(() => {
-    const m = num(mean),
-      s = num(sd),
-      x = num(score);
-    if ([m, s, x].some(Number.isNaN) || s <= 0) return null;
-    const z = (x - m) / s;
-    const t = 50 + 10 * z;
-    const letter = T_TABLE.find(([min]) => t >= min)![1];
-    // Standart normal CDF (Abramowitz-Stegun yaklaşımı)
-    const cdf = (v: number) => {
-      const k = 1 / (1 + 0.2316419 * Math.abs(v));
-      const d = 0.3989423 * Math.exp((-v * v) / 2);
-      const p = d * k * (0.3193815 + k * (-0.3565638 + k * (1.781478 + k * (-1.821256 + k * 1.330274))));
-      return v > 0 ? 1 - p : p;
-    };
-    return { z, t, letter, pct: cdf(z) * 100 };
-  }, [mean, sd, score]);
+  const r = useMemo(() => relativeGrade(mean, sd, score), [mean, sd, score]);
 
   // Çan eğrisi SVG yolu
   const W = 320,
@@ -277,22 +224,7 @@ function GpaCalc() {
   const [prevGpa, setPrevGpa] = useState("");
   const [prevCredit, setPrevCredit] = useState("");
 
-  const r = useMemo(() => {
-    const val = Object.fromEntries(LETTERS);
-    let c = 0,
-      p = 0;
-    for (const row of rows) {
-      const cr = num(row.credit);
-      if (Number.isNaN(cr) || cr <= 0) continue;
-      c += cr;
-      p += cr * val[row.letter];
-    }
-    const term = c ? p / c : null;
-    const pg = num(prevGpa),
-      pc = num(prevCredit);
-    const cum = !Number.isNaN(pg) && !Number.isNaN(pc) && pc > 0 && c ? (pg * pc + p) / (pc + c) : null;
-    return { term, cum, credits: c };
-  }, [rows, prevGpa, prevCredit]);
+  const r = useMemo(() => gpa(rows, prevGpa, prevCredit), [rows, prevGpa, prevCredit]);
 
   return (
     <div className="space-y-4">

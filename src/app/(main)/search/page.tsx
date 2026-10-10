@@ -34,7 +34,7 @@ export default async function SearchPage({
   let notes: ReturnType<typeof mapNoteRow>[] = [];
   if (hasQuery) {
     const sortColumn =
-      sp.sort === "created" ? "created_at" : sp.sort === "downloads" ? "downloads" : "likes";
+      sp.sort === "created" ? "created_at" : sp.sort === "downloads" ? "downloads" : "quality_score";
 
     let data: NoteRow[] | null = null;
     if (sp.q?.trim()) {

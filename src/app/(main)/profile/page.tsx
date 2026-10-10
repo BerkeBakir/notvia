@@ -31,11 +31,18 @@ const TABS = [
 export default async function ProfilePage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; not?: string; upgraded?: string }>;
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  const requested = (await searchParams).tab;
+  const sp = await searchParams;
+  const requested = sp.tab;
+  const flash =
+    sp.not === "silindi"
+      ? "Notun silindi."
+      : sp.upgraded === "1"
+        ? "Üyeliğin aktif! Teşekkürler 💚"
+        : null;
   const tab = TABS.some((t) => t.key === requested)
     ? (requested as (typeof TABS)[number]["key"])
     : "notlar";
@@ -129,6 +136,9 @@ export default async function ProfilePage({
 
   return (
     <div className="space-y-6">
+      {flash && (
+        <p className="rounded-xl border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-primary">{flash}</p>
+      )}
       {/* Kapak + kimlik */}
       <section className="overflow-hidden rounded-3xl border border-border bg-card">
         <div className="h-24 bg-[radial-gradient(120%_140%_at_0%_0%,color-mix(in_oklab,var(--primary)_35%,transparent),transparent_60%),radial-gradient(120%_140%_at_100%_100%,color-mix(in_oklab,var(--accent)_25%,transparent),transparent_60%)]" />

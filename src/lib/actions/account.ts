@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { passwordOk } from "@/lib/passwordRules";
+import { iyzicoConfigured } from "@/lib/payments/config";
+import { cancelSubscription } from "@/lib/payments/iyzico";
 
 export type ActionResult = { ok: boolean; message: string };
 
@@ -53,6 +55,16 @@ export async function deleteAccount(_: ActionResult | null, formData: FormData):
 
   const admin = createAdminClient();
   if (!admin) return { ok: false, message: "Sunucu yapılandırılmamış, info@notvia.app'e yaz." };
+
+  // Aktif abonelik varsa önce iyzico'da iptal et (silinen hesaptan ücret alınmaya devam etmesin)
+  const { data: subs } = await admin
+    .from("payment_subscriptions")
+    .select("reference_code")
+    .eq("user_id", user.id)
+    .in("status", ["ACTIVE", "PENDING"]);
+  if (subs?.length && iyzicoConfigured()) {
+    for (const s of subs) if (s.reference_code) await cancelSubscription(s.reference_code);
+  }
 
   // Yüklenen PDF'leri depodan sil
   const { data: files } = await admin.storage.from("notes").list(user.id, { limit: 1000 });

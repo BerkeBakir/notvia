@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getCurrentUser, isModerator } from "@/lib/supabase/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { moderateRemove, moderateRestore } from "@/lib/notes/moderation";
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
@@ -13,12 +14,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Sunucu yapılandırılmamış." }, { status: 503 });
   }
 
-  const { action, noteId, reportId, feedbackId, status } = await request.json().catch(() => ({}));
+  const { action, noteId, reportId, feedbackId, status, reason } = await request.json().catch(() => ({}));
 
-  if (action === "deleteNote" && noteId) {
-    // Notu sil (ilişkili şikayet/yorum/beğeni FK ile temizlenir)
-    const { error } = await admin.from("notes").delete().eq("id", noteId);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if ((action === "removeNote" || action === "deleteNote") && noteId) {
+    const res = await moderateRemove(admin, noteId, typeof reason === "string" ? reason.slice(0, 200) : "");
+    if (!res.ok) return NextResponse.json({ error: res.error }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (action === "restoreNote" && noteId) {
+    const res = await moderateRestore(admin, noteId);
+    if (!res.ok) return NextResponse.json({ error: res.error }, { status: 500 });
     return NextResponse.json({ ok: true });
   }
 

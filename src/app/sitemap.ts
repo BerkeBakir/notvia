@@ -6,15 +6,17 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://notvia.app";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const statics: MetadataRoute.Sitemap = ["", "/notes", "/search", "/leaderboard", "/premium", "/terms", "/privacy"].map(
+  const statics: MetadataRoute.Sitemap = ["", "/notes", "/search", "/leaderboard", "/premium", "/terms", "/privacy", "/hakkimizda", "/mesafeli-satis", "/on-bilgilendirme", "/iade"].map(
     (p) => ({ url: `${SITE}${p}`, changeFrequency: "daily", priority: p === "" ? 1 : 0.7 }),
   );
 
+  // Ortam değişkeni yoksa (ör. Supabase'siz önizleme derlemesi) yalnızca sabit sayfalar
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return statics;
+
   // Çerezsiz (anon) istemci: sitemap herkese açık veriyi listeler
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  const supabase = createClient(url, key);
   const [notes, courses] = await Promise.all([
     supabase.from("notes").select("id,created_at").order("created_at", { ascending: false }).limit(5000),
     supabase.from("courses").select("id,created_at").limit(5000),

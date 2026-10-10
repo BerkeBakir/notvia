@@ -45,7 +45,7 @@ const FEATURES = [
   {
     Icon: Star,
     title: "Beğeni & en iyi notlar",
-    desc: "En çok beğenilen notlar öne çıkar; kaliteli içerik kaybolmaz.",
+    desc: "Oy sayısını da hesaba katan puanla en iyi notlar öne çıkar; kaliteli içerik kaybolmaz.",
     span: "lg:col-span-2",
   },
   {
@@ -71,6 +71,7 @@ export default async function HomePage() {
     supabase
       .from("notes")
       .select("*")
+      .order("quality_score", { ascending: false })
       .order("likes", { ascending: false })
       .limit(6),
     getCurrentUser(),

@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser, isProfileComplete } from "@/lib/supabase/auth";
 
 // Profil eksikken de açılabilen sayfalar
-const PROFILE_EXEMPT = ["/profile/edit", "/terms", "/privacy"];
+const PROFILE_EXEMPT = ["/profile/edit", "/terms", "/privacy", "/hakkimizda", "/mesafeli-satis", "/on-bilgilendirme", "/iade"];
 
 export default async function MainLayout({
   children,

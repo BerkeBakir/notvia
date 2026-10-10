@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
     .from("notes")
     .select("id,title,course_id,created_at")
     .gte("created_at", since)
+    .is("hidden_at", null)
     .not("course_id", "is", null);
   if (!newNotes || newNotes.length === 0) {
     return NextResponse.json({ ok: true, sent: 0, reason: "no new notes" });

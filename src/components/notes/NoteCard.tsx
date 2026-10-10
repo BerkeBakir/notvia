@@ -5,6 +5,7 @@ import { LikeButton } from "@/components/notes/LikeButton";
 import { DownloadButton } from "@/components/notes/DownloadButton";
 import { AiSummary } from "@/components/notes/AiSummary";
 import { computeRating } from "@/lib/rating";
+import { CommunityBadge } from "@/components/notes/CommunityBadge";
 
 export function NoteCard({
   note,
@@ -57,7 +58,10 @@ export function NoteCard({
       >
         {note.type === "exam" ? "Sınav Sorusu" : "Ders Notu"}
       </span>
-      <div className="mt-3 flex items-start justify-between gap-2">
+      <div className="mt-2">
+        <CommunityBadge likes={note.likes} dislikes={note.dislikes} />
+      </div>
+      <div className="mt-1 flex items-start justify-between gap-2">
         <h3 className="font-heading text-lg text-card-foreground">
           <Link href={`/notes/${note.id}`} className="hover:text-primary">
             {note.title}
@@ -66,6 +70,7 @@ export function NoteCard({
         {rating !== null && (
           <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-0.5 text-xs text-foreground">
             <span className="text-accent">★</span> {rating.toFixed(1)}
+            <span className="text-muted">({note.likes + note.dislikes})</span>
           </span>
         )}
       </div>

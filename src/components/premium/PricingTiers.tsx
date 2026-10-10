@@ -1,15 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Check } from "@phosphor-icons/react";
-import { UpgradeButton } from "@/components/premium/UpgradeButton";
-
-type Billing = "monthly" | "yearly";
+import { formatTry, PLAN_PRICES_TRY, type Billing } from "@/lib/payments/config";
 
 interface Tier {
   name: string;
   plan: string;
-  monthly: number; // USD/ay
   highlight: boolean;
   features: string[];
 }
@@ -18,7 +16,6 @@ const TIERS: Tier[] = [
   {
     name: "Ücretsiz",
     plan: "free",
-    monthly: 0,
     highlight: false,
     features: [
       "Tüm notları tam PDF indir/görüntüle",
@@ -31,7 +28,6 @@ const TIERS: Tier[] = [
   {
     name: "Premium",
     plan: "premium",
-    monthly: 5,
     highlight: true,
     features: [
       "Ücretsizdeki her şey",
@@ -45,7 +41,6 @@ const TIERS: Tier[] = [
   {
     name: "Pro",
     plan: "pro",
-    monthly: 12,
     highlight: false,
     features: [
       "Premium'daki her şey",
@@ -58,20 +53,31 @@ const TIERS: Tier[] = [
   },
 ];
 
-// Yıllık = 10 ay fiyatına (2 ay bedava)
-const YEARLY_MONTHS = 10;
+function price(plan: string, billing: Billing) {
+  if (plan !== "premium" && plan !== "pro") return 0;
+  return PLAN_PRICES_TRY[plan][billing];
+}
 
-export function PricingTiers({ currentPlan }: { currentPlan: string }) {
+/**
+ * Plan kartları. Ödeme kapalıyken (enabled=false) fiyat ve satın alma düğmesi gösterilmez,
+ * yalnızca planların içeriği ve "yakında" bilgisi görünür.
+ */
+export function PricingTiers({ currentPlan, enabled }: { currentPlan: string; enabled: boolean }) {
   const [billing, setBilling] = useState<Billing>("monthly");
 
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h1 className="font-heading text-3xl font-bold text-foreground">Planını Seç</h1>
-        <p className="mt-2 text-muted">7 gün ücretsiz dene, istediğin zaman iptal et.</p>
+        <h1 className="font-heading text-3xl font-bold text-foreground">{enabled ? "Planını Seç" : "Premium Planlar"}</h1>
+        <p className="mt-2 text-muted">
+          {enabled
+            ? "İstediğin zaman iptal et, sonraki dönem ücret alınmaz."
+            : "Ücretli planlar yakında açılıyor. Şimdilik davet ederek Premium kazanabilirsin."}
+        </p>
       </div>
 
       {/* Aylık / Yıllık geçişi */}
+      {enabled && (
       <div className="flex items-center justify-center gap-2">
         <div className="inline-flex rounded-full border border-border bg-card p-0.5">
           <button
@@ -101,13 +107,13 @@ export function PricingTiers({ currentPlan }: { currentPlan: string }) {
           2 ay bedava
         </span>
       </div>
+      )}
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
         {TIERS.map((tier) => {
           const isCurrent = tier.plan === currentPlan;
           const isFree = tier.plan === "free";
-          const priceNum =
-            billing === "yearly" ? tier.monthly * YEARLY_MONTHS : tier.monthly;
+          const priceNum = price(tier.plan, billing);
           const period = isFree ? "" : billing === "yearly" ? " / yıl" : " / ay";
 
           return (
@@ -125,14 +131,16 @@ export function PricingTiers({ currentPlan }: { currentPlan: string }) {
                 </span>
               )}
               <h2 className="font-heading text-xl font-bold text-card-foreground">{tier.name}</h2>
-              <p className="mt-2">
-                <span className="text-3xl font-bold text-foreground">${priceNum}</span>
-                <span className="text-muted">{period}</span>
-              </p>
-              {!isFree && billing === "yearly" && (
-                <p className="mt-1 text-xs text-muted">
-                  Ayda ${(tier.monthly * YEARLY_MONTHS / 12).toFixed(2)} (12 ay yerine {YEARLY_MONTHS} ay öde)
+              {enabled || isFree ? (
+                <p className="mt-2">
+                  <span className="text-3xl font-bold text-foreground">{isFree ? "0 ₺" : formatTry(priceNum)}</span>
+                  <span className="text-muted">{period}</span>
                 </p>
+              ) : (
+                <p className="mt-2 text-sm font-medium text-accent">Yakında</p>
+              )}
+              {enabled && !isFree && billing === "yearly" && (
+                <p className="mt-1 text-xs text-muted">Ayda {formatTry(priceNum / 12)} (2 ay bedava)</p>
               )}
 
               <ul className="mt-5 space-y-2 text-sm text-muted">
@@ -145,15 +153,20 @@ export function PricingTiers({ currentPlan }: { currentPlan: string }) {
               </ul>
 
               <div className="mt-6">
-                {isCurrent || isFree ? (
+                {isCurrent || isFree || !enabled ? (
                   <button
                     disabled
                     className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-muted"
                   >
-                    {isCurrent ? "Mevcut planın" : "Ücretsiz"}
+                    {isCurrent ? "Mevcut planın" : isFree ? "Ücretsiz" : "Yakında"}
                   </button>
                 ) : (
-                  <UpgradeButton label={`${tier.name}'a Geç`} />
+                  <Link
+                    href={`/premium/odeme?plan=${tier.plan}&billing=${billing}`}
+                    className="block w-full rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-medium text-primary-foreground hover:opacity-90"
+                  >
+                    {tier.name}&apos;a Geç
+                  </Link>
                 )}
               </div>
             </div>
@@ -161,9 +174,19 @@ export function PricingTiers({ currentPlan }: { currentPlan: string }) {
         })}
       </div>
 
-      <p className="text-center text-xs text-muted">
-        Ödeme entegrasyonu (İyzico / Stripe) yakında eklenecek.
-      </p>
+      {enabled && (
+        <p className="text-center text-xs text-muted">
+          Ödemeler iyzico güvencesiyle alınır. Satın almadan önce{" "}
+          <Link href="/mesafeli-satis" className="underline">
+            Mesafeli Satış Sözleşmesi
+          </Link>{" "}
+          ve{" "}
+          <Link href="/iade" className="underline">
+            İptal ve İade Koşulları
+          </Link>
+          &apos;nı okuyabilirsin.
+        </p>
+      )}
     </div>
   );
 }
