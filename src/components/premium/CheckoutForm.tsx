@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { LockSimple } from "@phosphor-icons/react";
-import type { Billing, PaidPlan } from "@/lib/payments/config";
+import { formatTry, type Billing, type PaidPlan } from "@/lib/payments/config";
 
 const input =
   "w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-primary focus:ring-4 focus:ring-primary/10";
@@ -63,7 +63,7 @@ export function CheckoutForm({
       <div>
         <h1 className="font-heading text-2xl font-bold text-foreground">{planName} üyelik</h1>
         <p className="mt-1 text-muted">
-          {price} ₺ / {billing === "yearly" ? "yıl" : "ay"} · otomatik yenilenir, istediğin zaman Ayarlar&apos;dan iptal
+          {formatTry(price)} / {billing === "yearly" ? "yıl" : "ay"} · otomatik yenilenir, istediğin zaman Ayarlar&apos;dan iptal
           edebilirsin.
         </p>
       </div>

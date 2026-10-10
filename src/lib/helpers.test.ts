@@ -123,10 +123,10 @@ describe("wilsonScore (adil sıralama)", () => {
 });
 
 describe("isCommunityApproved", () => {
-  it("en az 5 beğeni ve net çoğunluk gerekir", () => {
-    expect(isCommunityApproved(4, 0)).toBe(false);
-    expect(isCommunityApproved(5, 0)).toBe(true);
-    expect(isCommunityApproved(6, 1)).toBe(false);
+  it("en az 10 beğeni ve net çoğunluk gerekir", () => {
+    expect(isCommunityApproved(9, 0)).toBe(false);
+    expect(isCommunityApproved(10, 0)).toBe(true);
+    expect(isCommunityApproved(10, 3)).toBe(false);
     expect(isCommunityApproved(40, 2)).toBe(true);
     expect(isCommunityApproved(20, 15)).toBe(false);
   });

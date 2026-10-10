@@ -40,8 +40,8 @@ export default function PreInfoPage() {
       <h2>5. Cayma hakkı</h2>
       <p>
         Elektronik ortamda anında ifa edilen hizmetlerde, ifaya tüketicinin onayıyla başlanması halinde cayma hakkı
-        kullanılamaz (Mesafeli Sözleşmeler Yönetmeliği md. 15/1-ğ). Bununla birlikte ilk aboneliğinde ödeme tarihinden
-        itibaren 7 gün içinde talep etmen halinde ücretin tamamı iade edilir. Ayrıntılar:{" "}
+        kullanılamaz (Mesafeli Sözleşmeler Yönetmeliği md. 15/1-ğ). Ödenen bedeller, hatalı veya mükerrer tahsilatlar ile
+        Notvia kaynaklı hizmet kesintileri dışında iade edilmez. Ayrıntılar:{" "}
         <Link href="/iade" className="text-primary hover:underline">
           Teslimat, İptal ve İade Koşulları
         </Link>

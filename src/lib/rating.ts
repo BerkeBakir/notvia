@@ -29,8 +29,9 @@ export function wilsonScore(likes: number, dislikes: number): number {
   return (p + z2 / (2 * n) - Z * Math.sqrt((p * (1 - p) + z2 / (4 * n)) / n)) / (1 + z2 / n);
 }
 
-export const COMMUNITY_APPROVED_MIN_LIKES = 5;
-export const COMMUNITY_APPROVED_MIN_SCORE = 0.5; // ör. 5 beğeni + 0 beğenmeme ≈ 0.57 onaylı; 6 + 1 ≈ 0.49 değil
+// Kullanıcı ve not sayısı arttıkça yükseltilecek (hedef ~50 beğeni).
+export const COMMUNITY_APPROVED_MIN_LIKES = 10;
+export const COMMUNITY_APPROVED_MIN_SCORE = 0.5; // ör. 10 beğeni + 0 beğenmeme ≈ 0.72 onaylı; 10 + 3 ≈ 0.50 sınırda değil
 
 /** "Topluluk onaylı" rozeti: yeterince beğeni almış ve beğenenleri açıkça çoğunlukta olan notlar. */
 export function isCommunityApproved(likes: number, dislikes: number): boolean {

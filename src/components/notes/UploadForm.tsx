@@ -165,7 +165,7 @@ export function UploadForm({
     setFile(f);
     // Başlık boşsa dosya adından öner
     if (!title.trim()) {
-      setTitle(f.name.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ").trim());
+      setTitle(f.name.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ").trim().slice(0, 150));
     }
   }
 
@@ -212,7 +212,8 @@ export function UploadForm({
 
     setPhase({ kind: "uploading", pct: 0, etaSec: null });
     try {
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      // Dosya adı yalnızca güvenli karakterlerle ve sınırlı uzunlukta depoya yazılır
+      const safeName = (file.name.replace(/\.pdf$/i, "").replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 80) || "not") + ".pdf";
       const path = `${userId}/${Date.now()}-${safeName}`;
 
       const {
@@ -420,6 +421,7 @@ export function UploadForm({
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Açıklama (opsiyonel) — hangi konular var, kimin dersi?"
           rows={3}
+          maxLength={2000}
           className={inputClass}
         />
 

@@ -49,8 +49,8 @@ export default function DistanceSalesPage() {
       <h2>Madde 6 — Cayma hakkı</h2>
       <p>
         Alıcı, hizmetin elektronik ortamda anında ifasına onay verdiğini ve bu nedenle Mesafeli Sözleşmeler
-        Yönetmeliği md. 15/1-ğ uyarınca cayma hakkının bulunmadığını kabul eder. Satıcı, ilk abonelikte ödeme
-        tarihinden itibaren 7 gün içinde yapılan taleplerde ücretin tamamını gönüllü olarak iade eder.
+        Yönetmeliği md. 15/1-ğ uyarınca cayma hakkının bulunmadığını kabul eder. Ödenen abonelik bedelleri, hatalı veya mükerrer
+        tahsilatlar ile Satıcı kaynaklı hizmet kesintileri dışında iade edilmez.
       </p>
 
       <h2>Madde 7 — İptal</h2>

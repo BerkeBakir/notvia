@@ -23,8 +23,7 @@ export default function RefundPage() {
       <p>
         Aboneliğini dilediğin zaman <b>Hesap ayarları → Abonelik → Aboneliği iptal et</b> adımlarıyla ya da{" "}
         {SELLER.email} adresine yazarak iptal edebilirsin. İptal sonrasında bir sonraki dönem için ücret alınmaz. İptal
-        anında ücretli özellikler kapanır; içinde bulunulan dönemin kalan kısmı için kısmi iade yapılmaz (aşağıdaki
-        istisnalar hariç).
+        anında ücretli özellikler kapanır; içinde bulunulan dönemin kalan kısmı için iade yapılmaz.
       </p>
 
       <h2>4. Cayma hakkı</h2>
@@ -33,17 +32,16 @@ export default function RefundPage() {
         edilen hizmetlerde tüketicinin onayıyla ifaya başlanmışsa cayma hakkı kullanılamaz. Ödeme sırasında bu konudaki
         onayın alınır.
       </p>
-      <p>
-        Buna rağmen, öğrenci dostu bir uygulama olarak: <b>ilk kez abone olduysan ve ödeme tarihinden itibaren 7 gün
-        içinde</b> talep edersen, ücretin tamamı iade edilir. Bu hak her kullanıcı için bir kez geçerlidir.
-      </p>
 
-      <h2>5. İade süreci</h2>
+      <h2>5. İade</h2>
+      <p>
+        Ödenen abonelik bedelleri aşağıdaki durumlar dışında iade edilmez. Aboneliği iptal ettiğinde içinde bulunduğun
+        dönem için iade yapılmaz; yalnızca sonraki dönemler için ücret alınmaz.
+      </p>
       <ul>
-        <li>İade talepleri {SELLER.email} adresine, hesabına kayıtlı e-postadan gönderilir.</li>
-        <li>Onaylanan iadeler en geç 14 gün içinde, ödemenin yapıldığı karta iade edilir.</li>
-        <li>İadenin kart ekstresine yansıma süresi bankana bağlıdır.</li>
         <li>Hatalı veya mükerrer tahsilatlar, süre şartı aranmaksızın tamamen iade edilir.</li>
+        <li>Notvia kaynaklı kesintilerde aşağıdaki 6. madde uygulanır.</li>
+        <li>İade talepleri {SELLER.email} adresine, hesabına kayıtlı e-postadan gönderilir ve en geç 14 gün içinde ödemenin yapıldığı karta iade edilir. Kart ekstresine yansıma süresi bankana bağlıdır.</li>
       </ul>
 
       <h2>6. Hizmetin kullanılamaması</h2>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Check } from "@phosphor-icons/react";
-import { PLAN_PRICES_TRY, type Billing } from "@/lib/payments/config";
+import { formatTry, PLAN_PRICES_TRY, type Billing } from "@/lib/payments/config";
 
 interface Tier {
   name: string;
@@ -133,14 +133,14 @@ export function PricingTiers({ currentPlan, enabled }: { currentPlan: string; en
               <h2 className="font-heading text-xl font-bold text-card-foreground">{tier.name}</h2>
               {enabled || isFree ? (
                 <p className="mt-2">
-                  <span className="text-3xl font-bold text-foreground">{isFree ? "0 ₺" : `${priceNum} ₺`}</span>
+                  <span className="text-3xl font-bold text-foreground">{isFree ? "0 ₺" : formatTry(priceNum)}</span>
                   <span className="text-muted">{period}</span>
                 </p>
               ) : (
                 <p className="mt-2 text-sm font-medium text-accent">Yakında</p>
               )}
               {enabled && !isFree && billing === "yearly" && (
-                <p className="mt-1 text-xs text-muted">Ayda {(priceNum / 12).toFixed(2)} ₺ (2 ay bedava)</p>
+                <p className="mt-1 text-xs text-muted">Ayda {formatTry(priceNum / 12)} (2 ay bedava)</p>
               )}
 
               <ul className="mt-5 space-y-2 text-sm text-muted">

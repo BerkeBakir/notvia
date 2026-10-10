@@ -5,10 +5,16 @@ export type PaidPlan = "premium" | "pro";
 export type Billing = "monthly" | "yearly";
 
 /** Görüntülenen fiyatlar (TL). iyzico panelindeki fiyatlandırma planlarıyla aynı tutulmalı. */
+// Yıllık = 10 aylık ücret (2 ay bedava).
 export const PLAN_PRICES_TRY: Record<PaidPlan, Record<Billing, number>> = {
-  premium: { monthly: 49, yearly: 490 },
-  pro: { monthly: 119, yearly: 1190 },
+  premium: { monthly: 399.99, yearly: 3999.9 },
+  pro: { monthly: 899.99, yearly: 8999.9 },
 };
+
+/** 399.99 → "399,99 ₺" (Türkçe biçim, her zaman iki ondalık). */
+export function formatTry(amount: number): string {
+  return amount.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ₺";
+}
 
 /** iyzico fiyatlandırma planı referans kodları (iyzico panelinde oluşturulur). */
 export function pricingPlanRef(plan: PaidPlan, billing: Billing): string | undefined {

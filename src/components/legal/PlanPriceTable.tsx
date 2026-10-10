@@ -1,4 +1,4 @@
-import { PLAN_PRICES_TRY } from "@/lib/payments/config";
+import { formatTry, PLAN_PRICES_TRY } from "@/lib/payments/config";
 
 /** Yasal metinlerdeki fiyat tablosu: ödeme sayfasıyla aynı kaynaktan okunur. */
 export function PlanPriceTable() {
@@ -15,8 +15,8 @@ export function PlanPriceTable() {
         {(["premium", "pro"] as const).map((p) => (
           <tr key={p} className="border-t border-border">
             <td className="px-3 py-2 text-foreground">{p === "pro" ? "Pro" : "Premium"}</td>
-            <td className="px-3 py-2">{PLAN_PRICES_TRY[p].monthly} ₺</td>
-            <td className="px-3 py-2">{PLAN_PRICES_TRY[p].yearly} ₺</td>
+            <td className="px-3 py-2">{formatTry(PLAN_PRICES_TRY[p].monthly)}</td>
+            <td className="px-3 py-2">{formatTry(PLAN_PRICES_TRY[p].yearly)}</td>
           </tr>
         ))}
       </tbody>

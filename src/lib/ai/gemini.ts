@@ -19,6 +19,8 @@ const FALLBACK_TEXT_CHARS = 40_000;
 const BUSY_MESSAGE = "AI şu anda yoğun (günlük ücretsiz kota dolmuş olabilir). Lütfen biraz sonra tekrar dene.";
 
 async function fetchPdf(fileUrl: string): Promise<Buffer> {
+  // SSRF koruması: yalnızca kendi Supabase depomuzdaki dosyalar indirilir
+  if (!fileUrl.startsWith(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/`)) throw new Error("Geçersiz dosya adresi.");
   const res = await fetch(fileUrl);
   if (!res.ok) throw new Error("PDF indirilemedi.");
   const declared = Number(res.headers.get("content-length"));
